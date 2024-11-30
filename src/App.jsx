@@ -33,14 +33,39 @@ import Dashboard from './components/dashboard/Dashboard';
 import OrderHistory from './components/dashboard/OrderHistory';
 import MyCart from './components/dashboard/MyCart';
 import Wishlist from './components/dashboard/Wishlist';
-import CategoryPage from './components/dashboard/CategoryPage';
+import CategoryPage from './components/CategoryPage';
 import Adresses from './components/dashboard/Addresses';
+import AllBrands from './components/AllBrands';
+import ProductRequest from './components/ProductRequest';
+import ComparePage from './components/ComparePage';
+import BrandPage from './components/BrandPage';
+import SupportToken from './components/dashboard/SupportToken';
+import Calculator from './components/Calculator';
+import SendReq from './components/SendReq';
+import AllShops from './components/AllShops';
+import TermsCondition from './components/TermsCondition';
+import ReturnPolicy from './components/ReturnPolicy';
+import SupportPolicy from './components/SupportPolicy';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import AccountSettings from './components/dashboard/AccountSettings';
+import CheckoutPage from './components/dashboard/CheckoutPage';
+import OrderPlace from './components/dashboard/OrderPlace';
+import Notifications from './components/dashboard/Notifications';
+import OrderView from './components/dashboard/OrderView';
+import CategoryList from './components/CategoryList';
+import NotFound from './components/NotFound';
+import RequirementsLog from './components/dashboard/RequirementsLog';
+import ShopPage from './components/ShopPage';
+import BlogPage from './components/BlogPage';
+import BlogView from './components/BlogView';
+import BecomeVendor from './components/BecomeVendor';
+
 
 
 
 export default function App() {
   
-  document.title = "Ecommerce Shop";
+  document.title = "Nirmanbazaar Bangladesh";
 
   CustomerAuthCheck();
   const isAuthenticated = useSelector((state)=>state.auth.isAuthenticated)
@@ -76,7 +101,32 @@ export default function App() {
           
           <Route path="/*" element={<MainContainer />}>
             <Route path="" element={<Home />} />
+            <Route path="all-category" element={<CategoryList />} />
+            <Route path="compare/" element={<ComparePage />} />
+
+            <Route path="all-brands/" element={<AllBrands />} />
+            <Route path="all-shops/" element={<AllShops />} />
+
+            <Route path="product-request/" element={<ProductRequest />} />
             <Route path="category/:category" element={<CategoryPage />} />
+
+            <Route path="shop-page/:slug" element={<ShopPage />} />
+            <Route path="brand-page/:slug" element={<BrandPage />} />
+ 
+            <Route path="calculator/" element={<Calculator />} />
+            <Route path="send-requirements/" element={<SendReq />} />
+
+            <Route path="blogs/" element={<BlogPage />} />
+            <Route path="blogs/:id" element={<BlogView />} />
+
+            <Route path="become-vendor/" element={<BecomeVendor />} />
+            
+
+            <Route path="terms-and-conditions/" element={<TermsCondition />} />
+            <Route path="return-policy/" element={<ReturnPolicy />} />
+            <Route path="support-policy/" element={<SupportPolicy />} />
+            <Route path="privacy-policy/" element={<PrivacyPolicy />} />
+           
             
             {isAuthenticated ? (
               <Route path="login" element={<Navigate to="/dashboard" />} />
@@ -87,15 +137,32 @@ export default function App() {
 
             <Route path="register" element={<Register />} />
             <Route path="product/:slug" element={<ProductView />} />
+            <Route path="*" element={<NotFound />} />
+
           </Route>
 
           <Route path="/dashboard/*" element={<DashboardContainer />}>
             <Route path="" element={<Dashboard />} />
             <Route path="order-history" element={<OrderHistory />} />
+            <Route path="order/:invID" element={<OrderView />} />
+
             <Route path="my-cart" element={<MyCart />} />
             <Route path="wishlist" element={<Wishlist />} />
+
+            <Route path="requirements-log" element={<RequirementsLog />} />
+
+            <Route path="account-settings" element={<AccountSettings />} />
             <Route path="addresses" element={<Adresses />} />
+
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="support" element={<SupportToken />} />
+
+            <Route path="checkout/:slug" element={<CheckoutPage />} />
+            <Route path="order-confirmation/:slug" element={<OrderPlace />} />
+
+
           </Route>
+          
 
         </Routes>
      

@@ -27,7 +27,7 @@ export default function CategoryPage() {
                 }
             }
     fetchData()
-    }, [base_domain])
+    }, [base_domain, window.location.pathname])
 
     const handleSliderChange = (value) => {
         setRange(value);
@@ -51,7 +51,7 @@ export default function CategoryPage() {
    
   return (
     <>
-    <div className="row">
+    <div className="row mt-2.5">
         <div className="col-md-3">
             <div className="filter_sidebar">
 
@@ -176,7 +176,7 @@ export default function CategoryPage() {
                 </div>
             </div>
             <div className="row">
-                {Products.map((data, index)=>(
+                {Products.length === 0 ? (<p className='m-auto w-full text-center border border-gray-100 py-4 rounded'>No Product Found !</p>):(Products.map((data, index)=>(
                     <div key={data.id} className="col-md-3 px-1">
                         <div className="product_card h-[318px] border border-gray-100 rounded-lg">
                             <Link to={`/product/${data.slug}`}>
@@ -191,7 +191,7 @@ export default function CategoryPage() {
                         </div>
                                 
                     </div>
-                ))}
+                )))}
             </div>
         </div>
     </div>

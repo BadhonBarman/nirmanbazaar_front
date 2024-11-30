@@ -1,0 +1,70 @@
+.dash_side_menu li button svg,
+.dash_side_menu li a svg{
+    height: 22px !important;
+    width: 22px !important;
+}
+
+.dash_side_menu li button svg:last-child path,
+.dash_side_menu li a svg:last-child path{
+    fill: transparent;
+}
+
+.dash_side_menu li button svg:last-child{
+    height: 12px !important;
+    width: 12px !important;
+}
+
+.product_card {
+    overflow: hidden;
+}
+
+.product_card_overlay {
+    opacity: 0;
+    visibility: hidden;
+    right: -40px !important;
+    transition: opacity 0.3s ease-in-out, right 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+
+.product_card:hover > .product_card_overlay {
+    opacity: 1;
+    visibility: visible;
+    right: 10px !important;
+    transition: opacity 0.3s ease-in-out, right 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+
+.product_card_overlay .flex button {
+    transform: translateX(20px); /* Initial position off-screen */
+    opacity: 0; /* Initially hidden */
+    animation-fill-mode: forwards; /* Ensure it stays in the final state */
+    animation: none; /* Prevent animation from running before hover */
+}
+
+.product_card:hover .product_card_overlay .flex button {
+    animation: wave 0.4s ease-in-out forwards;
+}
+
+.product_card_overlay .flex button:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.product_card_overlay .flex button:nth-child(2) {
+    animation-delay: 0.3s; /* Slightly increased delay for the second button */
+}
+
+.product_card_overlay .flex button:nth-child(3) {
+    animation-delay: 0.5s; /* Even more delay for the third button */
+}
+
+@keyframes wave {
+    0% {
+        transform: translateX(20px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+
+

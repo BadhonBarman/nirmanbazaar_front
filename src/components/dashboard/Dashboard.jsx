@@ -6,6 +6,9 @@ export default function Dashboard() {
 
     const base_domain = import.meta.env.VITE_APP_SOURCE_DOMAIN;
     const [wishlist, setWishlist] = useState(0);
+    const [order, setOrder] = useState(0);
+    document.title = "Dashboard";
+
 
     useEffect(() => {
         const fetchProductData = async () => {
@@ -20,14 +23,30 @@ export default function Dashboard() {
         fetchProductData();
     }, [base_domain]);
 
+
+    useEffect(() => {
+        const fetchProductData = async () => {
+        try {
+            const response = await api.post('/count_data/');
+            setOrder(response.data.total_order);
+        } catch (error) {
+            console.error('Error fetching product data:', error);
+        }
+        };
+
+        fetchProductData();
+    }, [base_domain]);
+
   return (
     <>
-    <div className="grid xl:grid-cols-4 sm:grid-cols-2 gap-2.5">
+    <div className="grid max-lg:grid-cols-2 grid-cols-4 gap-2.5">
 
         <div >
             <div className='bg-gradient-to-b from-green-50 to-green-100 p-8  rounded text-gray-800'>
-                <h4 className='xl:text-xl font-semibold'>Total Order</h4>
-                <p className='text-lg'>0 item</p>
+                <Link to={'order-history/'}>
+                    <h4 className='xl:text-xl font-semibold'>Total Order</h4>
+                    <p className='text-lg'>{order}</p>
+                </Link>
             </div>
         </div>
 

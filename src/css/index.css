@@ -3,15 +3,27 @@
 @tailwind utilities;
 
 :root{
-    --eng_font: 'Montserrat', sans-serif;
+    /* --eng_font: "Urbanist", system-ui; */
+    --eng_font: "Inter", sans-serif;
     --bangla_font: 'Noto Sans Bengali', sans-serif;
     --primary_bg: #0aad0a;
+    --ring-color: #c2eac2;
 }
 *{
     font-family: var(--eng_font);
 }
 
 
+.table>:not(caption)>*>*{
+  background-color: unset;
+}
+
+[type='text']:focus, [type='email']:focus, [type='url']:focus, [type='password']:focus, [type='number']:focus, [type='date']:focus, [type='datetime-local']:focus, [type='month']:focus, [type='search']:focus, [type='tel']:focus, [type='time']:focus, [type='week']:focus, [multiple]:focus, textarea:focus, select:focus{
+  box-shadow: #85d685 !important;
+  outline:none !important;
+  border-color: #85d685 !important;
+  box-shadow: 0px 0px 0px .25rem var(--ring-color);
+}
 
 /* Style the scrollbar track */
 ::-webkit-scrollbar{
@@ -108,3 +120,71 @@
 .shadow_none{
     box-shadow: none;
 }
+.category-button{
+  min-width: fit-content;
+}
+.header-menu{
+  display: inherit;
+  gap: inherit;
+  align-items: inherit;
+  overflow-x: scroll;
+  padding: .2rem 0;
+}
+.header-menu::-webkit-scrollbar{
+  height: 6px;
+}
+.header-menu::-webkit-scrollbar-thumb{
+  background: #d0d0d0;
+}
+.header-menu li{
+  min-width: fit-content !important;
+}
+
+
+
+.responsive_table {
+  width: 100%;
+  overflow-x: scroll;
+}
+
+/* The scrollbar */
+.responsive_table::-webkit-scrollbar {
+  height: 8px; /* Change this value for the scrollbar height */
+}
+
+/* The track (background) of the scrollbar */
+.responsive_table::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Change this to your desired track background color */
+  border-radius: 10px;
+}
+
+/* The draggable thumb of the scrollbar */
+.responsive_table::-webkit-scrollbar-thumb {
+  background: #888; /* Change this to your desired thumb color */
+  border-radius: 10px;
+}
+
+/* The thumb when hovered */
+.responsive_table::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Change this to your desired thumb hover color */
+}
+
+
+.section_title{
+  margin: 1rem 0;
+}
+.section_title a{
+  font-size: 15px;
+}
+@media (max-width: 768px) {
+  .section_title,
+  .section_title h4{
+    font-size: 20px !important;
+  }
+}
+
+
+
+
+
+

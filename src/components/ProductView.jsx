@@ -6,18 +6,46 @@ import api from '../features/PrivateApiCall';
 
 import DOMPurify from 'dompurify';
 import Header from './sub-components/Header';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation } from 'react-router-dom';
 
 import { ToastContainer, toast } from 'react-toastify';
+import CategoryConverter from './sub-components/CategoryConverter';
+import MeasureUnitConverter from './sub-components/MeasureUnitConverter';
 
 export default function ProductView() {
   const base_domain = import.meta.env.VITE_APP_SOURCE_DOMAIN;
   const { slug } = useParams(); // Use useParams directly
   const [product, setProduct] = useState(null);
+  const [division, setDivision] = useState(null);
+
+    const divisions = [
+        "Dhaka",
+        "Chattogram",
+        "Rajshahi",
+        "Khulna",
+        "Barishal",
+        "Sylhet",
+        "Rangpur",
+        "Mymensingh",
+    ];
+
+  const [prices, setPrices] = useState([]);
   const [cart, setCart] = useState(() => {
     const savedCart = localStorage.getItem('cart');
     return savedCart ? JSON.parse(savedCart) : {};
   });
+
+  const location = useLocation();
+
+  const fromSearchSuggestion = location.state?.fromSearchSuggestion;
+
+  useEffect(() => {
+    if (fromSearchSuggestion) {
+      console.log('Navigated from search suggestion');
+      // You can perform additional actions here
+    }
+  }, [fromSearchSuggestion]);
+
   const [quantity, setQuantity] = useState(1);
   initFlowbite()
   useEffect(() => {
@@ -26,6 +54,7 @@ export default function ProductView() {
       try {
         const response = await axios.post(`${base_domain}/product_view/`, {
           slug: slug,
+          fromSearch:fromSearchSuggestion,
         });
         setProduct(response.data);
         console.log(response.data);
@@ -33,9 +62,29 @@ export default function ProductView() {
         console.error(error);
       }
     };
-
     fetchProductData();
   }, [base_domain, slug]); // Add slug to the dependency array
+
+
+  const handleSubmit = async () => {
+    if (!division) {
+        alert("Please select a division.");
+        return;
+    }
+
+    try {
+        const response = await axios.post(`${base_domain}/product_source_data/`, {
+            slug: slug,
+            division: division,
+        });
+        console.log("This is source data:", response.data);
+        setPrices(response.data)
+        // Close modal programmatically
+        document.getElementById("closeModalButton").click();
+    } catch (error) {
+        console.error("Error fetching product source:", error);
+    }
+};
 
   const sanitizeHtml = (html) => {
     return { __html: DOMPurify.sanitize(html) };
@@ -107,6 +156,52 @@ export default function ProductView() {
 };
 
 
+    document.title = product?.title
+
+    useEffect(() => {
+        if (product?.keyword) {
+          const metaKeyword = document.querySelector('meta[name="keywords"]');
+          if (metaKeyword) {
+            // If the meta tag exists, update the content
+            metaKeyword.setAttribute('content', product.keyword);
+          } else {
+            // If the meta tag doesn't exist, create it
+            const meta = document.createElement('meta');
+            meta.name = 'keywords';
+            meta.content = product.keyword;
+            document.head.appendChild(meta);
+          }
+        }
+      }, [product]);
+
+      // Function to strip HTML tags and return plain text
+const stripHTML = (html) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || "";
+  };
+  
+ 
+    useEffect(() => {
+      if (product?.details) {
+        // Strip HTML from product.details
+        const safeDescription = stripHTML(product.details);
+  
+        const metaKeyword = document.querySelector('meta[name="description"]');
+        if (metaKeyword) {
+          // If the meta tag exists, update the content
+          metaKeyword.setAttribute('content', safeDescription);
+        } else {
+          // If the meta tag doesn't exist, create it
+          const meta = document.createElement('meta');
+          meta.name = 'description';
+          meta.content = safeDescription;
+          document.head.appendChild(meta);
+        }
+      }
+    }, [product]);
+
+
+      
 
   console.log(cart)
 
@@ -122,7 +217,7 @@ export default function ProductView() {
             </div>
             <div className="col-md-8">
                 <div className="product_info mt-8">
-                    <p className='text-green-500 text-lg'>Personal Care</p>
+                    <p className='text-green-500 text-lg'><CategoryConverter id={product.category} /></p>
                     <h4 className='text-3xl font-bold eng_font'>{product.title}</h4>
 
                     
@@ -137,13 +232,103 @@ export default function ProductView() {
                         </div>
 
                     
+                    {/* <div className="mt-2">
+                        {product.offer_price ? (<h6 className='text-2xl text-gray-800 font-semibold'><del className='text-gray-400'>৳{product.price}</del> ৳{product.offer_price} </h6>):(<h6 className='text-2xl text-gray-800 font-semibold'>৳ {product.price} <span className='text-sm'> / <MeasureUnitConverter id={product.unit} /> </span></h6>)}
+                    </div> */}
+                    
                     <div className="mt-2">
-                        {product.offer_price ? (<h6 className='text-2xl text-gray-800 font-semibold'><del className='text-gray-400'>৳{product.price}</del> ৳{product.offer_price} </h6>):(<h6 className='text-2xl text-gray-800 font-semibold'>৳ {product.price}</h6>)}
+                        <button 
+                        type="button"
+                        className="primary_bg text-white px-3.5 py-2 rounded"
+                        data-bs-toggle="modal"
+                        data-bs-target="#divisionModal"
+                        >Check Price & Availability</button>
+
+
+                        <div
+                            className="modal fade"
+                            id="divisionModal"
+                            tabIndex="-1"
+                            aria-labelledby="divisionModalLabel"
+                            aria-hidden="true"
+                        >
+                            <div className="modal-dialog">
+                                <div className="modal-content">
+                                    <div className="modal-header">
+                                        <h5 className="modal-title" id="divisionModalLabel">
+                                            Select a Division
+                                        </h5>
+                                        <button
+                                            type="button"
+                                            className="btn-close"
+                                            data-bs-dismiss="modal"
+                                            aria-label="Close"
+                                        ></button>
+                                    </div>
+                                    <div className="modal-body">
+                                        <form>
+                                            <div className="mb-3">
+                                                <label htmlFor="divisionSelect" className="form-label">
+                                                    Divisions of Bangladesh
+                                                </label>
+                                                <select
+                                                    className="form-select"
+                                                    id="divisionSelect"
+                                                    value={division || ""}
+                                                    onChange={(e) => setDivision(e.target.value)}
+                                                >
+                                                    <option value="" disabled>
+                                                        Select a division
+                                                    </option>
+                                                    {divisions.map((div, index) => (
+                                                        <option key={index} value={div}>
+                                                            {div}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button
+                                            type="button"
+                                            className="bg-red-600 text-white px-3.5 py-2 rounded"
+                                            data-bs-dismiss="modal"
+                                            id="closeModalButton"
+                                        >
+                                            Close
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="primary_bg text-white px-3.5 py-2 rounded"
+                                            onClick={handleSubmit}
+                                        >
+                                            Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                     
-                    <div className='mt-4'>
-                        {product.qty !== 0 ? (<p className='green_badge text-lg rounded'>In Stock</p>):(<p className='red_badge text-lg rounded'>Stock Out</p>)}
+                    {prices.length !== 0 &&
+                    <div className="mt-2">
+                        <h4 className='my-2 font-medium'>Product Price & Availability</h4>
+                        <table  className='table table-striped p-2'>
+                                {prices.map((data, index)=>(
+                                    <tr className='rounded-sm border-b border-green-800 bg-green-100'>
+                                        <td className='p-2'>{data.shop.name}</td>
+                                        <td className='p-2' >{data.price}<MeasureUnitConverter id={product.unit} /></td>
+                                    </tr>
+                                ))}
+                        </table>
                     </div>
+                    }
+
+                    {/* <div className='mt-4'>
+                        {product.qty !== 0 ? (<p className='green_badge text-lg rounded'>In Stock</p>):(<p className='red_badge text-lg rounded'>Stock Out</p>)}
+                    </div> */}
 
                     <label htmlFor="quantity-input" className="block mb-2 mt-8 text-lg font-medium text-gray-900 dark:text-white">Choose quantity:</label>
                     <div className="flex items-center gap-8">
@@ -187,30 +372,43 @@ export default function ProductView() {
 
                     <div className="share_btns mt-4">
                     <p className='text-md mb-2'>Share</p>
-                        <button className='p-2 rounded-full text-lg bg-gray-100 border-none hover:bg-gray-200'>
+                        <button  className='p-2 rounded-full text-lg bg-gray-100 border-none hover:bg-gray-200'>
+                            <Link to={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} rel="noopener noreferrer" target="_blank">
                             <svg className="w-6 h-6 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                 <path fillRule="evenodd" d="M13.135 6H15V3h-1.865a4.147 4.147 0 0 0-4.142 4.142V9H7v3h2v9.938h3V12h2.021l.592-3H12V6.591A.6.6 0 0 1 12.592 6h.543Z" clip-rule="evenodd"/>
                             </svg>
+                            </Link>
                         </button>
 
                         <button className='p-2 ml-2 rounded-full text-lg bg-gray-100 border-none hover:bg-gray-200'>
-                        <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                            <path fill="currentColor" fillRule="evenodd" d="M12 4a8 8 0 0 0-6.895 12.06l.569.718-.697 2.359 2.32-.648.379.243A8 8 0 1 0 12 4ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10a9.96 9.96 0 0 1-5.016-1.347l-4.948 1.382 1.426-4.829-.006-.007-.033-.055A9.958 9.958 0 0 1 2 12Z" clip-rule="evenodd"/>
-                            <path fill="currentColor" d="M16.735 13.492c-.038-.018-1.497-.736-1.756-.83a1.008 1.008 0 0 0-.34-.075c-.196 0-.362.098-.49.291-.146.217-.587.732-.723.886-.018.02-.042.045-.057.045-.013 0-.239-.093-.307-.123-1.564-.68-2.751-2.313-2.914-2.589-.023-.04-.024-.057-.024-.057.005-.021.058-.074.085-.101.08-.079.166-.182.249-.283l.117-.14c.121-.14.175-.25.237-.375l.033-.066a.68.68 0 0 0-.02-.64c-.034-.069-.65-1.555-.715-1.711-.158-.377-.366-.552-.655-.552-.027 0 0 0-.112.005-.137.005-.883.104-1.213.311-.35.22-.94.924-.94 2.16 0 1.112.705 2.162 1.008 2.561l.041.06c1.161 1.695 2.608 2.951 4.074 3.537 1.412.564 2.081.63 2.461.63.16 0 .288-.013.4-.024l.072-.007c.488-.043 1.56-.599 1.804-1.276.192-.534.243-1.117.115-1.329-.088-.144-.239-.216-.43-.308Z"/>
-                            </svg>
+                            <Link to={`https://api.whatsapp.com/send?text=${encodeURIComponent(window.location.href)}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer">
+                                <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path fill="currentColor" fillRule="evenodd" d="M12 4a8 8 0 0 0-6.895 12.06l.569.718-.697 2.359 2.32-.648.379.243A8 8 0 1 0 12 4ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10a9.96 9.96 0 0 1-5.016-1.347l-4.948 1.382 1.426-4.829-.006-.007-.033-.055A9.958 9.958 0 0 1 2 12Z" clip-rule="evenodd"/>
+                                <path fill="currentColor" d="M16.735 13.492c-.038-.018-1.497-.736-1.756-.83a1.008 1.008 0 0 0-.34-.075c-.196 0-.362.098-.49.291-.146.217-.587.732-.723.886-.018.02-.042.045-.057.045-.013 0-.239-.093-.307-.123-1.564-.68-2.751-2.313-2.914-2.589-.023-.04-.024-.057-.024-.057.005-.021.058-.074.085-.101.08-.079.166-.182.249-.283l.117-.14c.121-.14.175-.25.237-.375l.033-.066a.68.68 0 0 0-.02-.64c-.034-.069-.65-1.555-.715-1.711-.158-.377-.366-.552-.655-.552-.027 0 0 0-.112.005-.137.005-.883.104-1.213.311-.35.22-.94.924-.94 2.16 0 1.112.705 2.162 1.008 2.561l.041.06c1.161 1.695 2.608 2.951 4.074 3.537 1.412.564 2.081.63 2.461.63.16 0 .288-.013.4-.024l.072-.007c.488-.043 1.56-.599 1.804-1.276.192-.534.243-1.117.115-1.329-.088-.144-.239-.216-.43-.308Z"/>
+                                </svg>
+                            </Link>
 
                         </button>
 
                         <button className='p-2 ml-2 rounded-full text-lg bg-gray-100 border-none hover:bg-gray-200'>
-                            <svg className="w-6 h-6 text-gray-800 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                             <path fill="currentColor" fillRule="evenodd" d="M3 8a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V8Zm5-3a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3H8Zm7.597 2.214a1 1 0 0 1 1-1h.01a1 1 0 1 1 0 2h-.01a1 1 0 0 1-1-1ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm-5 3a5 5 0 1 1 10 0 5 5 0 0 1-10 0Z" clip-rule="evenodd"/>
-                            </svg>
+                            <Link to={`https://www.instagram.com/share?url=${encodeURIComponent(window.location.href)}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer" >
+                                <svg className="w-6 h-6 text-gray-800 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path fill="currentColor" fillRule="evenodd" d="M3 8a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V8Zm5-3a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3H8Zm7.597 2.214a1 1 0 0 1 1-1h.01a1 1 0 1 1 0 2h-.01a1 1 0 0 1-1-1ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm-5 3a5 5 0 1 1 10 0 5 5 0 0 1-10 0Z" clip-rule="evenodd"/>
+                                </svg>
+                            </Link>
                         </button>
 
                         <button className='p-2 ml-2 rounded-full text-lg bg-gray-100 border-none hover:bg-gray-200'>
-                            <svg className="w-6 h-6 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M13.795 10.533 20.68 2h-3.073l-5.255 6.517L7.69 2H1l7.806 10.91L1.47 22h3.074l5.705-7.07L15.31 22H22l-8.205-11.467Zm-2.38 2.95L9.97 11.464 4.36 3.627h2.31l4.528 6.317 1.443 2.02 6.018 8.409h-2.31l-4.934-6.89Z"/>
-                            </svg>
+                            <Link to={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`} 
+                            target="_blank" rel="noopener noreferrer" >
+                                <svg className="w-6 h-6 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M13.795 10.533 20.68 2h-3.073l-5.255 6.517L7.69 2H1l7.806 10.91L1.47 22h3.074l5.705-7.07L15.31 22H22l-8.205-11.467Zm-2.38 2.95L9.97 11.464 4.36 3.627h2.31l4.528 6.317 1.443 2.02 6.018 8.409h-2.31l-4.934-6.89Z"/>
+                                </svg>
+                            </Link>
                         </button>
 
                     </div>

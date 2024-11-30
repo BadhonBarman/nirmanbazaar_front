@@ -79,7 +79,7 @@ export default function Login() {
 
         <div className="max-w-md mx-auto border px-4 py-8 rounded mt-32">
             <div className='mb-8'>
-                <h4 className='text-2xl font-bold'>Sign in to Ecomus</h4>
+                <h4 className='text-2xl font-bold'>Sign in to NirmanBazaar</h4>
                 <p>Welcome back ! Enter your Phone to get started.</p>
             </div>
             
