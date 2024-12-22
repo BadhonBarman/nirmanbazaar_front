@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css'; // Import toast styles
 export default function MyCart() {
   const base_domain = import.meta.env.VITE_APP_SOURCE_DOMAIN;
   const [cart, setCart] = useState([]);
+  const [reject, setReject] = useState([]);
   const [total, setTotal] = useState(0);
   const [Qcart, setQCart] = useState(() => {
     const savedCart = localStorage.getItem('cart');
@@ -36,6 +37,8 @@ export default function MyCart() {
     fetchProductData();
   }, [base_domain]);
 
+  console.log('address : ', selectedAdr)
+
   useEffect(() => {
     const fetchProductData = async () => {
       try {
@@ -43,31 +46,33 @@ export default function MyCart() {
         if (savedCart) {
           const cartData = JSON.parse(savedCart);
           const productIds = Object.values(cartData).map(item => item.prod_id);
-          const response = await axios.post(`${base_domain}/cart_data/`, { data: productIds });
-          setCart(response.data);
+          const response = await api.post(`/mycart_data/`, { data: productIds, addr_id:selectedAdr });
+          setCart(response.data.available);
+          setReject(response.data.not_available)
+          console.log('this is response : ', response.data)
         } else {
           console.log('No cart data found in localStorage');
         }
       } catch (error) {
+        setCart([])
         console.error('Error fetching product data:', error);
       }
     };
 
     fetchProductData();
-  }, [base_domain]);
+  }, [base_domain, selectedAdr]);
 
   useEffect(() => {
     const calculateTotal = () => {
       return cart.reduce((total, data) => {
-        const itemTotal = data.offer_price
-          ? data.offer_price * (Qcart[data.id]?.qty || 0)
-          : data.price * (Qcart[data.id]?.qty || 0);
+        const itemTotal = 
+          data.price * (Qcart[data.product.id]?.qty || 0);
         return total + itemTotal;
       }, 0);
     };
 
     setTotal(calculateTotal());
-  }, [cart, Qcart]);
+  }, [cart, Qcart, selectedAdr]);
 
   const handleSubmit = async () => {
     const savedCart = localStorage.getItem('cart');
@@ -88,7 +93,8 @@ export default function MyCart() {
         }
       });
 
-      if (response.data.successfull) {
+      if (response.data) {
+        window.location = response.data.redirect
         toast.success('Order placed successfully!');
 
         // Clear cart after successful order
@@ -97,13 +103,12 @@ export default function MyCart() {
         setCart([]);
         setTotal(0);
 
-        // Redirect to another page or show the order summary if necessary
-        navigate('/dashboard/order-history');
       } else {
         toast.error('Failed to place the order.');
       }
     } catch (error) {
-      toast.error('Error placing the order.');
+      console.log(error.response.data)
+      toast.error(error.response.data.error);
       console.log(error);
     }
   };
@@ -119,6 +124,8 @@ export default function MyCart() {
   const handleFileChange = (event) => {
     setFileUpload(event.target.files[0]); // Get the uploaded file
   };
+
+  console.log(cart)
 
   return (
     <>
@@ -138,11 +145,34 @@ export default function MyCart() {
                   </tr>
                 </thead>
                 <tbody>
+                {reject.map((data) => (
+                    <tr key={data.id} className='bg-red-100'>
+                      <td>
+                        <Link to={`/product/${data.slug}`} className='flex  border-none items-center mb-2'>
+                          <img height={64} width={64} className='opacity-40 rounded-sm' src={`${base_domain}${data.image}`} alt="" />
+                          <div className='pl-2'>
+                            <h4 className='text-sm opacity-40'>{data.title}</h4>
+                            <span className='text-sm text-red-800'>Please contact us for order. This product not available in your area.</span>
+                          </div>
+                        </Link>
+                      </td>
+                      <td>
+                        --
+                      </td>
+                      <td className='opacity-40'>
+                        {Qcart[data.id]?.qty || 0}
+                      </td>
+                      <td>
+                        --
+                      </td>
+                    </tr>
+                  ))}
+
                   {cart.map((data) => (
                     <tr key={data.id}>
                       <td>
                         <Link to={`/product/${data.slug}`} className='flex border-none items-center mb-2'>
-                          <img height={64} width={64} className='rounded-sm' src={`${base_domain}${data.image}`} alt="" />
+                          <img height={64} width={64} className='rounded-sm' src={`${base_domain}${data.product.image}`} alt="" />
                           <div className='pl-2'>
                             <h4 className='text-sm'>{data.title}</h4>
                           </div>
@@ -156,13 +186,13 @@ export default function MyCart() {
                         )}
                       </td>
                       <td>
-                        {Qcart[data.id]?.qty || 0}
+                        {Qcart[data.product.id]?.qty || 0}
                       </td>
                       <td>
                         {data.offer_price ? (
                           <h6 className='text-sm text-gray-800 border-none font-semibold'>৳{data.offer_price * (Qcart[data.id]?.qty || 0)}</h6>
                         ) : (
-                          <h6 className='text-sm border-none text-gray-800 font-semibold'>৳{data.price * (Qcart[data.id]?.qty || 0)}</h6>
+                          <h6 className='text-sm border-none text-gray-800 font-semibold'>৳{data.price * (Qcart[data.product.id]?.qty || 0)}</h6>
                         )}
                       </td>
                     </tr>
@@ -171,6 +201,7 @@ export default function MyCart() {
               </table>
             )}
           </div>
+          
         </div>
 
         <div className="col-md-4">

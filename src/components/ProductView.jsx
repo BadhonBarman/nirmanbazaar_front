@@ -17,6 +17,7 @@ export default function ProductView() {
   const { slug } = useParams(); // Use useParams directly
   const [product, setProduct] = useState(null);
   const [division, setDivision] = useState(null);
+  const [district, setDistrict] = useState(null);
 
     const divisions = [
         "Dhaka",
@@ -29,7 +30,17 @@ export default function ProductView() {
         "Mymensingh",
     ];
 
+    const dhaka_districts = ['Dhaka', 'Gazipur', 'Narayanganj', 'Tangail', 'Munshiganj', 'Narsingdi', 'Manikganj', 'Kishoreganj', 'Shariatpur', 'Narshingdi', 'Faridpur', 'Gopalganj', 'Madaripur', 'Rajbari', 'Tangail'];
+    const chattogram_districts = ['Chattogram', 'Coxs Bazar', 'Rangamati', 'Khagrachari', 'Bandarban', 'Feni', 'Noakhali', 'Lakshmipur', 'Chandpur', 'Brahmanbaria'];
+    const rajshahi_districts = ['Rajshahi', 'Bogra', 'Pabna', 'Joypurhat', 'Naogaon', 'Natore', 'Chapainawabganj', 'Sirajganj'];
+    const khulna_districts = ['Khulna', 'Jessore', 'Satkhira', 'Meherpur', 'Narail', 'Chuadanga', 'Kushtia', 'Magura', 'Bagerhat', 'Jhenaidah'];
+    const barishal_districts = ['Barishal', 'Barguna', 'Bhola', 'Jhalokati', 'Patuakhali', 'Pirojpur'];
+    const sylhet_districts = ['Sylhet', 'Moulvibazar', 'Habiganj', 'Sunamganj'];
+    const rangpur_districts = ['Rangpur', 'Dinajpur', 'Gaibandha', 'Kurigram', 'Lalmonirhat', 'Nilphamari', 'Panchagarh', 'Thakurgaon'];
+    const mymensingh_districts = ['Mymensingh', 'Jamalpur', 'Netrokona', 'Sherpur'];
+    
   const [prices, setPrices] = useState([]);
+  const [isPriceCheck, setPriceCheck] = useState(false);
   const [cart, setCart] = useState(() => {
     const savedCart = localStorage.getItem('cart');
     return savedCart ? JSON.parse(savedCart) : {};
@@ -67,8 +78,13 @@ export default function ProductView() {
 
 
   const handleSubmit = async () => {
+    setPriceCheck(true)
     if (!division) {
         alert("Please select a division.");
+        return;
+    }
+    if (!district) {
+        alert("Please select a district.");
         return;
     }
 
@@ -76,6 +92,7 @@ export default function ProductView() {
         const response = await axios.post(`${base_domain}/product_source_data/`, {
             slug: slug,
             division: division,
+            district: district,
         });
         console.log("This is source data:", response.data);
         setPrices(response.data)
@@ -104,6 +121,7 @@ export default function ProductView() {
       },
     };
 
+    
     
 
     // Update state with the new cart data
@@ -204,6 +222,7 @@ const stripHTML = (html) => {
       
 
   console.log(cart)
+  console.log('district:', district);
 
   return product ? (
     <>
@@ -287,6 +306,51 @@ const stripHTML = (html) => {
                                                     ))}
                                                 </select>
                                             </div>
+
+                                            <div className="mb-3">
+                                                <label htmlFor="divisionSelect" className="form-label">
+                                                     Disctrict of Bangladesh
+                                                </label>
+                                                {!division &&(
+                                                    <select className='form-select'>
+                                                        <option value="" disabled selected>Select a division first</option>
+                                                    </select>
+                                                )} 
+                                                {division && (
+                                                    <select
+                                                        className="form-select"
+                                                        id="districtSelect"
+                                                        value={district || ""}
+                                                        onChange={(e) => setDistrict(e.target.value)}
+                                                    >
+                                                        <option value="" disabled>Select a district</option>
+                                                        {division === "Dhaka" && dhaka_districts.map((district, index) => (
+                                                            <option key={index} value={district}>{district}</option>
+                                                        ))}
+                                                        {division === "Chattogram" && chattogram_districts.map((district, index) => (
+                                                            <option key={index} value={district}>{district}</option>
+                                                        ))}
+                                                        {division === "Rajshahi" && rajshahi_districts.map((district, index) => (
+                                                            <option key={index} value={district}>{district}</option>
+                                                        ))}
+                                                        {division === "Khulna" && khulna_districts.map((district, index) => (
+                                                            <option key={index} value={district}>{district}</option>
+                                                        ))}
+                                                        {division === "Barishal" && barishal_districts.map((district, index) => (
+                                                            <option key={index} value={district}>{district}</option>
+                                                        ))}
+                                                        {division === "Sylhet" && sylhet_districts.map((district, index) => (
+                                                            <option key={index} value={district}>{district}</option>
+                                                        ))}
+                                                        {division === "Rangpur" && rangpur_districts.map((district, index) => (
+                                                            <option key={index} value={district}>{district}</option>
+                                                        ))}
+                                                        {division === "Mymensingh" && mymensingh_districts.map((district, index) => (
+                                                            <option key={index} value={district}>{district}</option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                            </div>
                                         </form>
                                     </div>
                                     <div className="modal-footer">
@@ -312,7 +376,8 @@ const stripHTML = (html) => {
 
                     </div>
                     
-                    {prices.length !== 0 &&
+                    
+                    {isPriceCheck === true && prices.length !== 0 ? (
                     <div className="mt-2">
                         <h4 className='my-2 font-medium'>Product Price & Availability</h4>
                         <table  className='table table-striped p-2'>
@@ -324,6 +389,12 @@ const stripHTML = (html) => {
                                 ))}
                         </table>
                     </div>
+                    ):(isPriceCheck === true && 
+                        <div className="mt-2">
+                        <h4 className='my-2 font-medium'>Product Price & Availability</h4>
+                        <p className='alert alert-warning'>This Product may not availalbe in your location, please contact us.</p>
+                    </div>
+                    )
                     }
 
                     {/* <div className='mt-4'>

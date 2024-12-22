@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom'; // Corrected import statement
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // Corrected import statement
 import api from '../../features/PrivateApiCall';
+import { toast } from 'react-toastify';
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  
 
   useEffect(() => {
     const fetchOrderHistory = async () => {
@@ -22,6 +27,26 @@ export default function OrderHistory() {
 
     fetchOrderHistory();
   }, []);
+
+  useEffect(() => {
+    const { state } = location;
+
+    console.log('state : ',state)
+    if(state === "successful"){
+      toast.success("Purchase Successful.")
+      navigate({ pathname: location.pathname }, { replace: true });
+
+    }
+    else if (state === "purchace_cancel") {
+      toast.error("Purchase Cancelled.");
+      navigate({ pathname: location.pathname }, { replace: true });
+    }
+    else if(state === "purchace_failed"){
+      toast.error("Purchase Failed.");
+      navigate({ pathname: location.pathname }, { replace: true });
+    }
+  }, [location.pathname]); // Include toast in dependencies
+
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;

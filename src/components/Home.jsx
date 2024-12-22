@@ -198,7 +198,7 @@ export default function Home() {
               <img src="/images/6.jpg" alt="" />
             </Link>
 
-            <Link  to={'/heavy-equipment-buy-rent'} className='rounded overflow-hidden'>
+            <Link  to={'/category/heavy-equipment-buy-rent'} className='rounded overflow-hidden'>
               <img src="/images/7.jpg" alt="" />
             </Link>
 

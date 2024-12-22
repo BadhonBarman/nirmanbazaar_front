@@ -59,6 +59,9 @@ import ShopPage from './components/ShopPage';
 import BlogPage from './components/BlogPage';
 import BlogView from './components/BlogView';
 import BecomeVendor from './components/BecomeVendor';
+import Experthire from './components/Experthire';
+import ExpertDisplay from './components/ExpertDisplay';
+import HandlePay from './components/dashboard/HandlePay';
 
 
 
@@ -120,6 +123,9 @@ export default function App() {
             <Route path="blogs/:id" element={<BlogView />} />
 
             <Route path="become-vendor/" element={<BecomeVendor />} />
+            <Route path="expert-hire/" element={<Experthire />} />
+
+            <Route path="expert-hire/:slug" element={<ExpertDisplay />} />
             
 
             <Route path="terms-and-conditions/" element={<TermsCondition />} />
@@ -159,6 +165,7 @@ export default function App() {
 
             <Route path="checkout/:slug" element={<CheckoutPage />} />
             <Route path="order-confirmation/:slug" element={<OrderPlace />} />
+            <Route path="handlepay/:code" element={<HandlePay />} />
 
 
           </Route>
