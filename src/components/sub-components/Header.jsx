@@ -2,7 +2,7 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import { useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 
 export default function Header() {
@@ -10,6 +10,7 @@ export default function Header() {
     const base_domain = import.meta.env.VITE_APP_SOURCE_DOMAIN;
     const [isDropdownVisible, setDropdownVisible] = useState(false);
     const [cart, setCart] = useState([])
+    const [skipItem, setSkipItem] = useState([])
     const [compares, setCompares] = useState(() => {
       // Retrieve the 'compares' from localStorage and parse it, or use an empty array as fallback
       return JSON.parse(localStorage.getItem('compares')) || [];
@@ -17,7 +18,13 @@ export default function Header() {
     
     
 
-    const [category, setCategory] = useState([])
+    const [categories, setCategory] = useState([])
+    const [subCategories , setSubCategory] = useState([])
+    const [subSubCategories , setSubSubCategory] = useState([])
+
+    const [menuOpen, setMenuOpen] = useState(false); // Controls the dropdown menu
+    const [openCategory, setOpenCategory] = useState(null);
+    const [openSubCategory, setOpenSubCategory] = useState(null);
 
     const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
     
@@ -29,6 +36,7 @@ export default function Header() {
     const dropdownRef = useRef(null);  // Ref for the dropdown div
     
   
+    const isSmallScreen = false;
 
     useEffect(() => {
       const fetchProductData = async () => {
@@ -43,8 +51,9 @@ export default function Header() {
   
             // Send the product IDs to the API
             const response = await axios.post(`${base_domain}/cart_data/`, { data: productIds });
-            setCart(response.data);
-            console.log(response.data);
+            setCart(response.data.products);
+            setSkipItem(response.data.skipped_ids)
+            console.log("cart data :", response.data);
           } else {
             console.log('No cart data found in localStorage');
           }
@@ -54,13 +63,25 @@ export default function Header() {
       };
   
       fetchProductData();
-    }, [base_domain]);
+
+       // 🔥 Listen for cart updates
+    const handleStorageChange = () => fetchProductData();
+
+    window.addEventListener("cartUpdated", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("cartUpdated", handleStorageChange);
+    };
+    }, [base_domain, window.location.pathname, ]);
 
     useEffect(() => {
       const categoryData = async () => {
       try {
           const response = await axios.get(`${base_domain}/categories/`);
-          setCategory(response.data);
+          console.log('category response : ', response.data)
+          setCategory(response.data.categories);
+          setSubCategory(response.data.sub_categories);
+          setSubSubCategory(response.data.sub_sub_categories);
       }
       catch (error) {
           console.error(error);
@@ -68,7 +89,7 @@ export default function Header() {
       };
 
       categoryData();
-  }, [base_domain]);
+  }, [base_domain, window.location.pathname]);
 
     useEffect(() => {
       const fetchData = async () => {
@@ -115,10 +136,8 @@ export default function Header() {
       
       const calculateTotal = () => {
         return cart.reduce((total, data) => {
-          const itemTotal = data.offer_price 
-            ? data.offer_price * (Qcart[data.id]?.qty || 0)
-            : data.price * (Qcart[data.id]?.qty || 0);
-      
+          const itemTotal = 
+            data.product.price * (Qcart[data.product.id]?.qty || 0);
           return total + itemTotal;
         }, 0); // Initialize the accumulator to 0
       };
@@ -145,26 +164,37 @@ export default function Header() {
     };
   }, [dropdownRef]);
 
-
+  // Handle item removal and dispatch custom event
   const handleRemoveItem = (itemId) => {
-    // Remove item from the cart in localStorage
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
       const cartData = JSON.parse(savedCart);
-      delete cartData[itemId]; // Assuming itemId corresponds to the key in localStorage
+      delete cartData[itemId];
 
       // Update localStorage
       localStorage.setItem('cart', JSON.stringify(cartData));
+
+      // Dispatch custom event
+      window.dispatchEvent(new Event('cartUpdated'));
 
       // Update state to remove item from cart
       setCart(prevCart => prevCart.filter(item => item.id !== itemId));
     }
   };
-
+  const navigate = useNavigate();
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && searchKeyword.trim()) {
+      setDropdownVisible(false);
+      navigate(`/search/${searchKeyword}`);
+    }else if(searchKeyword.trim()){
+      setDropdownVisible(true);
+    }
+  };
+  
    
 
     
-
+  console.log('this is cart data : ', cart)
   
     
 
@@ -185,18 +215,41 @@ export default function Header() {
       <div className="offcanvas-body relative">
         <div className='h-full overflow-x-scroll'>
           {cart.length === 0 ? (<div className='flex h-full items-center justify-center'><p>Your shopping cart is empty!</p></div>):(
-          <ul>
-            {cart.map((data, index)=>(
-              <li key={data.id} className='flex justify-between'>
-              <Link to={`product/${data.slug}`} className='flex items-center mb-2'>
-                <img  height={64} width={64} className='rounded-sm' src={`${base_domain}${data.image}`} alt="" />
-                  <div className='pl-2'>
-                    <h4 className='text-sm'>{data.title}</h4>
-                    {data.offer_price ? (<h6 className='text-sm text-gray-800 font-semibold'><del className='text-gray-400'>৳{data.price}</del> ৳{data.offer_price} </h6>):(<h6 className='text-sm text-gray-800 font-semibold'>৳ {data.price}</h6>)}
+          <ul className='space-y-2'>
+            {skipItem.map((data, index)=>(
+              <li key={data.id} className='flex justify-between bg-red-200 p-2.5 rounded-lg'>
+              <Link to={`product/${data.slug}`} className='flex items-center'>
+                <img  height={64} width={64} className='rounded-lg' src={`${base_domain}${data.image}`} alt="" />
+                  <div className='pl-2 '>
+                    <div className='opacity-80'>
+                      <h4 className='text-sm'>{data.title}</h4>
+                      
+                      {/* {data.offer_price ? (<h6 className='text-sm text-gray-800 font-semibold'><del className='text-gray-400'>৳{data.price}</del> ৳{data.offer_price} </h6>):(<h6 className='text-sm text-gray-800 font-semibold'>৳ {data.price}</h6>)} */}
+                    </div>
+                    <p className='text-xs font-bold text-red-800'>This Product Not Available</p>
                   </div>
               </Link>
 
               <button onClick={() => handleRemoveItem(data.id)} className="ml-4 text-red-500">
+            Remove
+          </button>
+              </li>
+            ))}
+
+            {cart.map((data, index)=>(
+              <li key={data.id} className='flex justify-between p-2.5 rounded-lg bg-gray-100'>
+              <Link to={`product/${data.product.slug}`} className='flex items-center'>
+                <img  height={64} width={64} className='rounded-sm' src={`${base_domain}${data.product.image}`} alt="" />
+                  <div className='pl-2'>
+                    <h4 className='text-sm'>{data.product.title}</h4>
+                    {data.offer_price ? (<h6 className=' flex items-center text-sm text-gray-800 font-semibold'><del className='text-gray-400'>৳{data.product.price}</del> ৳{data.offer_price} </h6>):(<h6 className='text-sm flex items-center gap-1 text-gray-800 font-semibold'>৳ {data.product.price}
+                      <span>x</span> <span>{Qcart[data.product.id]?.qty} = {data.product.price*Qcart[data.product.id]?.qty}</span>
+                    </h6>)}
+                    
+                  </div>
+              </Link>
+
+              <button onClick={() => handleRemoveItem(data.product.id)} className="ml-4 text-red-500">
             Remove
           </button>
               </li>
@@ -240,9 +293,12 @@ export default function Header() {
          
         <div className="relative" ref={dropdownRef}>
       <div onClick={()=>(setDropdownVisible(true))}  className="flex w-full items-center rounded px-2 max-xl:w-full max-md:hidden visible  xl:w-[540px] border border-gray-300 bg-white">
-        <svg xmlns="http://www.w3.org/2000/svg" height={24} width={24} viewBox="0 0 512 512">
-          <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
-        </svg>
+        <button>
+          <svg xmlns="http://www.w3.org/2000/svg" height={24} width={24} viewBox="0 0 512 512">
+            <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
+          </svg>
+        </button>
+
         <input
           type="text"
           placeholder="Search for products"
@@ -254,7 +310,9 @@ export default function Header() {
           className="w-full text-lg px-4 py-2 border-none bg-inherit focus:border-none focus:shadow-none"
           style={{'boxShadow':'none'}}
           onChange={handleSearchChange}
+          onKeyDown={handleKeyDown}
         />
+        
       </div>
       
       {isDropdownVisible && (
@@ -414,25 +472,129 @@ export default function Header() {
 
       <div className="container max-md:hidden visible">
         <ul className='flex items-center'>
-          <li className='category-button'>
-         
+        <li className="category-button">
+                
+        <div className="relative">
+            {/* Button to toggle menu */}
             <div className="dropdown">
-            <button data-bs-toggle="dropdown" aria-expanded="false" className='primary_bg text-white py-2.5 px-8 min-w-fit flex items-center gap-2 rounded-tl rounded-bl'>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                                  <rect x="3" y="3" width="7" height="7"></rect>
-                                  <rect x="14" y="3" width="7" height="7"></rect>
-                                  <rect x="14" y="14" width="7" height="7"></rect>
-                                  <rect x="3" y="14" width="7" height="7"></rect>
-                                </svg> <span>All Categories</span>
-              </button>
-              <ul className="dropdown-menu">
-                {category.map((data, index)=>(
-                  <li><Link className="dropdown-item" to={`category/${data.slug}`} >{data.title}</Link></li>
-                ))}
-            
-              </ul>
+                <button
+                    onClick={() => {setMenuOpen(!menuOpen)
+                      setOpenCategory(null);
+                      setOpenSubCategory(null);}
+                    }
+                    className="primary_bg text-white py-2.5 px-8 min-w-fit flex items-center gap-2 rounded-tl rounded-bl"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>All Categories</span>
+                </button>
             </div>
+
+            {/* Category Dropdown */}
+            <div className="relative">
+  {menuOpen && (
+    <ul className="absolute left-0 mt-2 bg-white text-black shadow-lg rounded-md w-64 p-2 z-10 max-h-96 overflow-y-auto">
+      {categories.map((category) => (
+        <li
+          key={category.id}
+          className="relative group"
+          onMouseEnter={() => {
+            setOpenCategory(category.id);
+            setOpenSubCategory(null);
+          }}
+        >
+          <Link
+            to={`/category/${category.slug}`}
+            onClick={() => {
+              setMenuOpen(false);
+              setOpenCategory(null);
+              setOpenSubCategory(null);
+            }}
+            className="px-4 py-2 hover:bg-gray-200 flex items-center"
+          >
+            {category.title}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  {/* Subcategory Dropdown */}
+  {openCategory && (
+    <ul
+      className={`absolute ${
+        isSmallScreen ? 'top-full left-0' : 'left-64 top-[0.5rem]'
+      } mt-0 w-48 bg-white text-black shadow-lg rounded-md max-h-60 overflow-y-auto z-20`}
+    >
+      {subCategories
+        .filter((sub) => sub.category.id === openCategory)
+        .map((sub) => (
+          <li
+            key={sub.id}
+            className="relative group"
+            onMouseEnter={() => setOpenSubCategory(sub.id)}
+          >
+            <Link
+              to={`/category/${categories.find((c) => c.id === openCategory)?.slug}/${sub.slug}`}
+              onClick={() => {
+                setMenuOpen(false);
+                setOpenCategory(null);
+                setOpenSubCategory(null);
+              }}
+              className="block px-4 py-2 hover:bg-gray-200"
+            >
+              {sub.title}
+            </Link>
           </li>
+        ))}
+    </ul>
+  )}
+
+  {/* Sub-Subcategory Dropdown */}
+  {openSubCategory && (
+    <ul
+      className={`absolute ${
+        isSmallScreen ? 'top-[9rem] left-0' : 'left-[28.1rem] top-[0.5rem]'
+      } w-48 bg-white text-black shadow-lg rounded-md max-h-60 overflow-y-auto z-30`}
+    >
+      {subSubCategories
+        .filter((subSub) => subSub.sub_category.id === openSubCategory)
+        .map((subSub) => (
+          <li key={subSub.id}>
+            <Link
+              to={`/category/${categories.find((c) => c.id === openCategory)?.slug}/${subCategories.find((s) => s.id === openSubCategory)?.slug}/${subSub.slug}`}
+              onClick={() => {
+                setMenuOpen(false);
+                setOpenCategory(null);
+                setOpenSubCategory(null);
+              }}
+              className="block px-4 py-2 hover:bg-gray-200"
+            >
+              {subSub.title}
+            </Link>
+          </li>
+        ))}
+    </ul>
+  )}
+</div>
+
+            
+        </div>       
+    </li>
           
           <ul className='header-menu flex gap-4 bg-[#ecf6ee8a] backdrop-blur-2xl w-full py-2 !px-2.5 rounded-tr rounded-br'>
             <li><Link to={'/all-brands/'}>All Brands</Link></li>

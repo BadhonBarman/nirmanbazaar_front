@@ -49,6 +49,7 @@ const Footer = () => {
               <li><Link>Track Order</Link></li>
               <li><Link>Payment Option</Link></li>
               <li><Link to={'/become-vendor/'}>Become Seller</Link></li>
+              <li><Link to={'/brand-enrollment/'}>Brand Enrollment</Link></li>
             </ul>
           </div>
 

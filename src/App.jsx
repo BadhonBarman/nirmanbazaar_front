@@ -46,7 +46,7 @@ import AllShops from './components/AllShops';
 import TermsCondition from './components/TermsCondition';
 import ReturnPolicy from './components/ReturnPolicy';
 import SupportPolicy from './components/SupportPolicy';
-import PrivacyPolicy from './components/PrivacyPolicy';
+
 import AccountSettings from './components/dashboard/AccountSettings';
 import CheckoutPage from './components/dashboard/CheckoutPage';
 import OrderPlace from './components/dashboard/OrderPlace';
@@ -62,6 +62,13 @@ import BecomeVendor from './components/BecomeVendor';
 import Experthire from './components/Experthire';
 import ExpertDisplay from './components/ExpertDisplay';
 import HandlePay from './components/dashboard/HandlePay';
+import BrandEnrollment from './components/BrandEnrollment';
+import PrivacyPolicy from './components/PrivacyPolicyPage';
+import PrivacyPolicyPage from './components/PrivacyPolicyPage';
+import BiddingPortal from './components/dashboard/BiddingPortal';
+import BiddingForm from './components/dashboard/BiddingForm';
+import BiddingFormVIew from './components/dashboard/BiddingFormVIew';
+import SearchPage from './components/SearchPage';
 
 
 
@@ -107,11 +114,15 @@ export default function App() {
             <Route path="all-category" element={<CategoryList />} />
             <Route path="compare/" element={<ComparePage />} />
 
+            <Route path="search/:keyword" element={<SearchPage />} />
+
             <Route path="all-brands/" element={<AllBrands />} />
             <Route path="all-shops/" element={<AllShops />} />
 
             <Route path="product-request/" element={<ProductRequest />} />
             <Route path="category/:category" element={<CategoryPage />} />
+            <Route path="category/:category/:sub/" element={<CategoryPage />} />
+            <Route path="category/:category/:sub/:subsub/" element={<CategoryPage />} />
 
             <Route path="shop-page/:slug" element={<ShopPage />} />
             <Route path="brand-page/:slug" element={<BrandPage />} />
@@ -123,6 +134,8 @@ export default function App() {
             <Route path="blogs/:id" element={<BlogView />} />
 
             <Route path="become-vendor/" element={<BecomeVendor />} />
+            <Route path="brand-enrollment/" element={<BrandEnrollment />} />
+
             <Route path="expert-hire/" element={<Experthire />} />
 
             <Route path="expert-hire/:slug" element={<ExpertDisplay />} />
@@ -131,7 +144,8 @@ export default function App() {
             <Route path="terms-and-conditions/" element={<TermsCondition />} />
             <Route path="return-policy/" element={<ReturnPolicy />} />
             <Route path="support-policy/" element={<SupportPolicy />} />
-            <Route path="privacy-policy/" element={<PrivacyPolicy />} />
+            <Route path="privacy-policy/" element={<PrivacyPolicyPage />} />
+      
            
             
             {isAuthenticated ? (
@@ -159,6 +173,10 @@ export default function App() {
 
             <Route path="account-settings" element={<AccountSettings />} />
             <Route path="addresses" element={<Adresses />} />
+
+            <Route path="bidding-portal/" element={<BiddingPortal />} />
+            <Route path="bidding-portal/form" element={<BiddingForm />} />
+            <Route path="bidding-portal/form/:id" element={<BiddingFormVIew />} />
 
             <Route path="notifications" element={<Notifications />} />
             <Route path="support" element={<SupportToken />} />

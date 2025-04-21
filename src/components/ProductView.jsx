@@ -11,6 +11,13 @@ import { Link, useParams, useLocation } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import CategoryConverter from './sub-components/CategoryConverter';
 import MeasureUnitConverter from './sub-components/MeasureUnitConverter';
+import ProductCard from './sub-components/ProductCard';
+import { Helmet } from 'react-helmet';
+
+
+import 'lightbox2/dist/css/lightbox.min.css'; // Correct path for CSS
+import 'lightbox2/dist/js/lightbox-plus-jquery.min.js'; // Correct path for JS
+
 
 export default function ProductView() {
   const base_domain = import.meta.env.VITE_APP_SOURCE_DOMAIN;
@@ -18,6 +25,7 @@ export default function ProductView() {
   const [product, setProduct] = useState(null);
   const [division, setDivision] = useState(null);
   const [district, setDistrict] = useState(null);
+  const [related, setRelated] = useState([]);
 
     const divisions = [
         "Dhaka",
@@ -59,8 +67,8 @@ export default function ProductView() {
 
   const [quantity, setQuantity] = useState(1);
   initFlowbite()
-  useEffect(() => {
-    
+
+  useEffect(() => {  
     const fetchProductData = async () => {
       try {
         const response = await axios.post(`${base_domain}/product_view/`, {
@@ -76,6 +84,25 @@ export default function ProductView() {
     fetchProductData();
   }, [base_domain, slug]); // Add slug to the dependency array
 
+
+
+  useEffect(() => {  
+    const fetchProductData = async () => {
+      try {
+        const response = await axios.post(`${base_domain}/related_product_view/`, {
+          slug: slug,
+        });
+        setRelated(response.data);
+        console.log("related product : ", response.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchProductData();
+  }, [base_domain, slug]); // Add slug to the dependency array
+
+  
+  
 
   const handleSubmit = async () => {
     setPriceCheck(true)
@@ -107,27 +134,40 @@ export default function ProductView() {
     return { __html: DOMPurify.sanitize(html) };
   };
 
+
+  <Helmet>
+    <meta property="og:title" content={product?.title} />
+    <meta property="og:description" content={product?.details} />
+    <meta property="og:image" content={`${base_domain}${product?.image}`} />
+    <meta property="og:url" content={window.location.href} />
+    <meta property="og:type" content="website" />
+</Helmet>
+
   const handleAddCart = () => {
     // Retrieve existing cart data from localStorage
-    const existingCart = JSON.parse(localStorage.getItem('cart')) || {};
-    
-
-    // Update cart with the new item
-    const updatedCart = {
-      ...existingCart,
-      [product.id]: {
-        prod_id: product.id,
-        qty:  quantity,
-      },
-    };
-
-    
-    
-
-    // Update state with the new cart data
-    setCart(updatedCart);
-    toast.success('Item added successfully!');
-  };
+        const existingCart = JSON.parse(localStorage.getItem('cart')) || {};
+      
+        // Update cart with the new item
+        const updatedCart = {
+          ...existingCart,
+          [product.id]: {
+            prod_id: product.id,
+            qty: quantity,
+          },
+        };
+      
+        // Update localStorage
+        localStorage.setItem('cart', JSON.stringify(updatedCart));
+      
+        // Dispatch custom event
+        window.dispatchEvent(new Event('cartUpdated'));
+      
+        // Update state with the new cart data
+        setCart(updatedCart);
+      
+        toast.success('Item added successfully!');
+      };
+      
 
   useEffect(() => {
     // Save the updated cart data to localStorage
@@ -175,6 +215,8 @@ export default function ProductView() {
 
 
     document.title = product?.title
+
+
 
     useEffect(() => {
         if (product?.keyword) {
@@ -224,6 +266,9 @@ const stripHTML = (html) => {
   console.log(cart)
   console.log('district:', district);
 
+  
+
+
   return product ? (
     <>
 
@@ -231,7 +276,28 @@ const stripHTML = (html) => {
         <div className="row">
             <div className="col-md-4">
                 <div className="product_img">
-                <img className='rounded' src={`${base_domain}${product.image}`} alt="" />
+                <Link
+                             to={`${base_domain}${product.image}`}
+                             data-lightbox={`album-${product.id}`}
+                             data-title={product.title}
+                            className="col-4 rounded"
+                         >
+                        <img className='rounded' src={`${base_domain}${product.image}`} alt="" />
+                </Link>
+
+                <div className='grid grid-cols-4 gap-2'>
+                    {product.images.map((data, index)=>(
+                        <Link key={data.id}
+                                to={`${base_domain}${data.image}`}
+                                data-lightbox={`album-${data.id}${index}`}
+                                data-title={product.title}
+                            className="rounded"
+                            >
+                            <img className='w-full h-auto rounded'  src={`${base_domain}${data.image}`} alt="" />
+                        </Link>
+                    ))}
+                </div>
+
                 </div>            
             </div>
             <div className="col-md-8">
@@ -255,6 +321,7 @@ const stripHTML = (html) => {
                         {product.offer_price ? (<h6 className='text-2xl text-gray-800 font-semibold'><del className='text-gray-400'>৳{product.price}</del> ৳{product.offer_price} </h6>):(<h6 className='text-2xl text-gray-800 font-semibold'>৳ {product.price} <span className='text-sm'> / <MeasureUnitConverter id={product.unit} /> </span></h6>)}
                     </div> */}
                     
+                    <p>**For Corporate Deal or Price, <Link to={'/dashboard/bidding-portal/'} className='underline text-yellow-400'>Please Use Bidding System. <span>click here</span></Link></p>
                     <div className="mt-2">
                         <button 
                         type="button"
@@ -384,7 +451,7 @@ const stripHTML = (html) => {
                                 {prices.map((data, index)=>(
                                     <tr className='rounded-sm border-b border-green-800 bg-green-100'>
                                         <td className='p-2'>{data.shop.name}</td>
-                                        <td className='p-2' >{data.price}<MeasureUnitConverter id={product.unit} /></td>
+                                        <td className='p-2' >{data.qty}<MeasureUnitConverter id={product.unit} /></td>
                                     </tr>
                                 ))}
                         </table>
@@ -416,6 +483,18 @@ const stripHTML = (html) => {
                                 </svg>
                             </button>
                         </div>
+                    </div>
+
+                    <div className='flex flex-row gap-2.5 mt-4'>
+                        <Link to={'tel:+8801931110999'} className='flex gap-2 items-cente bg-gradient-to-r text-white px-2.5 py-2 rounded-md from-[#25d366cc] to-[#189d7f] '>
+                            <svg className='fill-white h-6 w-6' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48C141.1 48 48 141.1 48 256l0 40c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-40C0 114.6 114.6 0 256 0S512 114.6 512 256l0 144.1c0 48.6-39.4 88-88.1 88L313.6 488c-8.3 14.3-23.8 24-41.6 24l-32 0c-26.5 0-48-21.5-48-48s21.5-48 48-48l32 0c17.8 0 33.3 9.7 41.6 24l110.4 .1c22.1 0 40-17.9 40-40L464 256c0-114.9-93.1-208-208-208zM144 208l16 0c17.7 0 32 14.3 32 32l0 112c0 17.7-14.3 32-32 32l-16 0c-35.3 0-64-28.7-64-64l0-48c0-35.3 28.7-64 64-64zm224 0c35.3 0 64 28.7 64 64l0 48c0 35.3-28.7 64-64 64l-16 0c-17.7 0-32-14.3-32-32l0-112c0-17.7 14.3-32 32-32l16 0z"/></svg>
+                            <span >Call Us</span>
+                        </Link>
+
+                        <Link target='_blank' to={'https://api.whatsapp.com/send/?phone=%2B8801931110999'} className='flex gap-2 items-cente bg-gradient-to-r text-white px-2.5 py-2 rounded-md from-[#25d366cc] to-[#189d7f] '>
+                            <svg className='fill-white h-6 w-6' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7 .9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+                            <span>Message on Whatsapp</span>
+                        </Link>
                     </div>
                     
                      
@@ -571,7 +650,21 @@ const stripHTML = (html) => {
     </div>
 </div>
 
-    
+
+
+<div className='container'>
+    <div className='border-b border-gray-200 dark:border-gray-700 pb-2'>
+        <h2 className='text-base lg:text-xl font-semibold'>Related Products</h2>
+    </div>
+
+    <div className="grid gap-2.5 grid-cols-5 max-sm:grid-cols-2 max-md:grid-cols-3 max-lg:grid-cols-3 mt-4">
+        {related.map((data, index) => (
+          <ProductCard data={data} key={index} />
+        ))}
+      </div>
+
+
+</div>
 
 
 

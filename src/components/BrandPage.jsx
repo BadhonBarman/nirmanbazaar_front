@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import ProductCard from './sub-components/ProductCard';
 
 export default function BrandPage() {
@@ -10,6 +10,19 @@ export default function BrandPage() {
   const [Products, setProducts] = useState([])
   const [brandInfo, setBrand] = useState(null)
   const [TotalProducts, setTotal] = useState(0)
+
+
+const navigate = useNavigate();
+   const location = useLocation();
+
+    const queryParams = new URLSearchParams(location.search);
+       const initialPage = parseInt(queryParams.get('page')) || 1;
+       const [CurrentPage, setCurrentPage] = useState(initialPage);
+       const productsPerPage = 8;
+       const totalPages = Math.ceil(TotalProducts / productsPerPage);
+    
+       const initialKeyword = queryParams.get('q') || '';
+      const [searchKeyword, setSearchKeyword] = useState(initialKeyword);
   
 
   useEffect(()=>{
@@ -18,6 +31,9 @@ export default function BrandPage() {
         try {
             const response = await axios.post(`${base_domain}/brand_products/`, {
                 slug:slug,
+                page: CurrentPage,
+                items_per_page:productsPerPage,
+                search:searchKeyword,
             });
             console.log(response.data)
             setProducts(response.data.products);
@@ -29,8 +45,52 @@ export default function BrandPage() {
         }
     }
 fetchData()
-}, [base_domain, window.location.pathname])
+}, [base_domain, slug, CurrentPage, totalPages, searchKeyword])
     
+
+
+    // Get the current page from the URL or default to 1
+
+    useEffect(() => {
+          // Update the URL whenever the page changes
+          if (CurrentPage > totalPages){
+            setCurrentPage(1)
+          }
+          else if(CurrentPage===1){
+            return
+          }
+          else{
+            queryParams.set('page', CurrentPage);
+          }
+          navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
+    }, [CurrentPage, navigate, location.pathname, Products]);
+        
+    
+
+       // Update URL whenever the search keyword changes
+      useEffect(() => {
+        if (searchKeyword) {
+          queryParams.set('q', searchKeyword);
+        } else {
+          queryParams.delete('q');
+        }
+        navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
+      }, [searchKeyword, navigate, location.pathname]);
+
+      const handleSearch = (e) => {
+        setSearchKeyword(e.target.value);
+      }; 
+      
+
+
+  const handlePrevPage = () => {
+    if (CurrentPage > 1) setCurrentPage(CurrentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (CurrentPage < totalPages) setCurrentPage(CurrentPage + 1);
+  };
+
     return (
     <>
     <div className="mt-4">
@@ -69,7 +129,8 @@ fetchData()
                     {brandInfo?.name.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())}
                 </h2>
 
-                <input type="text" placeholder={`Search ${brandInfo?.name}`} className='rounded' />
+                <input type="text" placeholder={`Search ${brandInfo?.name}`} value={searchKeyword} 
+        onChange={handleSearch}  className='rounded' />
             </div>
 
             <div className="row py-4">
@@ -79,26 +140,39 @@ fetchData()
                 <div className="col-md-9">
                     <div className="flex justify-end items-center">
                         
-                        <select className='rounded-md' name="sorting" id="sorting">
+                        {/* <select className='rounded-md' name="sorting" id="sorting">
                             <option value="featured">Sort by: Newest</option>
                             <option value="featured">Sort by: Oldest</option>
                             <option value="featured">Price: Low to High</option>
                             <option value="featured">Price: High to Low</option>
                             <option value="featured">Avg. Rating</option>
-                        </select>
+                        </select> */}
                     </div>
                 </div>
             </div>
 
-            <div className="grid gap-2.5 max-md:grid-cols-2 grid-cols-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                 {Products.map((data, index)=>(
                     <ProductCard data={data} />
                 ))}
             </div>
 
+
+            {/* Pagination */}
+          <div className="flex justify-center mt-6">
+            <button onClick={handlePrevPage} disabled={CurrentPage === 1} className="p-3.5 mx-1 bg-gray-300 rounded-full disabled:opacity-50">
+                <svg className='h-4 w-4' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/></svg>
+            </button>
+            <span className="px-4 py-2 mx-2">Page {CurrentPage} of {totalPages}</span>
+            <button onClick={handleNextPage} disabled={CurrentPage === totalPages} className="p-3.5 mx-1 bg-gray-300 rounded-full disabled:opacity-50">
+                <svg className='h-4 w-4' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg>
+            </button>
+          </div>
+
             </div>
         </div>
     </div>
+    
     </>
   )
 }

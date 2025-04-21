@@ -171,7 +171,6 @@ export default function Home() {
           <h4 className='text-2xl text-white px-3.5 py-1.5 rounded-sm bg-gradient-to-r from-yellow-400 to-yellow-200 font-medium'>Featured Categories</h4>
       </div>
         
-        
 
           <div className="grid gap-2 max-md:grid-cols-2 grid-cols-4">
             <Link  to={'/category/building-materials'} className='rounded overflow-hidden'>
@@ -209,7 +208,8 @@ export default function Home() {
    
   </div>
 
-
+  
+  {flashSaleProducts.length > 0 && (
   <div className="section">
     <div className="section_title">
         <h4 className='text-2xl text-gray-800 font-medium'>Flash Sale</h4>
@@ -221,6 +221,7 @@ export default function Home() {
         ))}
     </div>
   </div>
+  )}
 
 
 

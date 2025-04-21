@@ -66,7 +66,7 @@ export default function MyCart() {
     const calculateTotal = () => {
       return cart.reduce((total, data) => {
         const itemTotal = 
-          data.price * (Qcart[data.product.id]?.qty || 0);
+          data.product.price * (Qcart[data.product.id]?.qty || 0);
         return total + itemTotal;
       }, 0);
     };
@@ -182,7 +182,7 @@ export default function MyCart() {
                         {data.offer_price ? (
                           <h6 className='text-sm border-none text-gray-800 font-semibold'>৳{data.offer_price}</h6>
                         ) : (
-                          <h6 className='text-sm border-none text-gray-800 font-semibold'>৳{data.price}</h6>
+                          <h6 className='text-sm border-none text-gray-800 font-semibold'>৳{data.product.price}</h6>
                         )}
                       </td>
                       <td>
@@ -192,7 +192,7 @@ export default function MyCart() {
                         {data.offer_price ? (
                           <h6 className='text-sm text-gray-800 border-none font-semibold'>৳{data.offer_price * (Qcart[data.id]?.qty || 0)}</h6>
                         ) : (
-                          <h6 className='text-sm border-none text-gray-800 font-semibold'>৳{data.price * (Qcart[data.product.id]?.qty || 0)}</h6>
+                          <h6 className='text-sm border-none text-gray-800 font-semibold'>৳{data.product.price * (Qcart[data.product.id]?.qty || 0)}</h6>
                         )}
                       </td>
                     </tr>

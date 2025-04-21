@@ -41,6 +41,7 @@ export default function ProductCard({data}) {
           // Update state with the new cart data
           setCart(updatedCart);
           toast.success('Item added successfully!');
+          window.dispatchEvent(new Event("cartUpdated"));
         }
       };
       
@@ -135,15 +136,17 @@ export default function ProductCard({data}) {
               </div>
               <Link to={`/product/${data.slug}`}>
                 <img
-                  className="w-full max-md:h-32 h-48 object-cover rounded-t-lg"
+                  className="w-full max-md:h-32 !h-48 object-cover rounded-t-lg"
                   src={`${base_domain}${data.image}`}
                   alt={data.title}
                 />
                 <div className="product_card_text p-2">
-                  <h4 className="text-sm text-start font-medium">
-                    <TextShorter text={data.title} range={48} />
+                  <h4 className="text-sm text-start font-medium min-h-10">
+                    <TextShorter text={data.title} range={38} />
                   </h4>
-                  <p className="text-md font-medium text-right mt-2 text-green-500">{data.price} tk</p>
+                  {data.price > 0 ? (
+                    <p className="text-md font-medium text-right mt-2 text-green-500">{data.price} tk</p>
+                  ):(<p className="text-md font-medium text-right mt-2 text-red-500">TBA</p>)}
                 </div>
 
                 <div className='w-full text-center bg-gray-100 letter-spacing-wide rounded'>

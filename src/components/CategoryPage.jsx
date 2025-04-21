@@ -1,14 +1,25 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import ReactSlider from 'react-slider';
 
 export default function CategoryPage() {
     const base_domain = import.meta.env.VITE_APP_SOURCE_DOMAIN;
-    const {category} = useParams()
-    const [CategoryName, setCategoryName] = useState(category)
+    const {category, sub, subsub} = useParams()
+    const [CategoryName, setCategoryName] = useState("")
+    const [SubCategoryName, setSubCategoryName] = useState("")
+    const [SubSubCategoryName, setSubSubCategoryName] = useState("")
     const [Products, setProducts] = useState([])
     const [TotalProducts, setTotal] = useState(0)
+
+   const navigate = useNavigate();
+      const location = useLocation();
+      const queryParams = new URLSearchParams(location.search);
+      const initialPage = parseInt(queryParams.get('page')) || 1;
+      const [CurrentPage, setCurrentPage] = useState(initialPage);
+      const productsPerPage = 8;
+      const totalPages = Math.ceil(TotalProducts / productsPerPage);
+
     
     const [range, setRange] = useState([0, 100]);
 
@@ -17,6 +28,10 @@ export default function CategoryPage() {
                 try {
                     const response = await axios.post(`${base_domain}/category_items/`, {
                         slug:category,
+                        sub:sub,
+                        subsub:subsub,
+                        page: CurrentPage,
+                        items_per_page: productsPerPage,
                     });
                     console.log(response.data)
                     setProducts(response.data.products);
@@ -27,11 +42,41 @@ export default function CategoryPage() {
                 }
             }
     fetchData()
-    }, [base_domain, window.location.pathname])
+    }, [base_domain,category, sub,subsub, CurrentPage ,window.location.pathname])
+
+
+    
+        useEffect(() => {
+          // Check if CurrentPage exceeds totalPages and reset to 1 if needed
+          if (CurrentPage > totalPages) {
+            setCurrentPage(1);
+            return;
+          }
+          
+          // Update the URL based on the current page
+          if (CurrentPage === 1) {
+            navigate(location.pathname, { replace: true }); // Remove the page parameter for the first page
+          } else {
+            queryParams.set('page', CurrentPage);
+            navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
+          }
+        }, [CurrentPage, totalPages, navigate, location.pathname]);
+        
+          
+            
 
     const handleSliderChange = (value) => {
         setRange(value);
       };
+
+
+  const handlePrevPage = () => {
+    if (CurrentPage > 1) setCurrentPage(CurrentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (CurrentPage < totalPages) setCurrentPage(CurrentPage + 1);
+  };
 
     const fill_start = (
         <svg class="w-4 h-4 ms-1 text-yellow-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 20">
@@ -46,6 +91,12 @@ export default function CategoryPage() {
     )
 
 
+    useEffect(()=>{
+        setCategoryName(category)
+        setSubCategoryName(sub)
+        setSubSubCategoryName(subsub)
+    }, [category, sub, subsub])
+    
     document.title = CategoryName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 
    
@@ -154,8 +205,26 @@ export default function CategoryPage() {
 
         <div className="col-md-9">
             <div className="py-8 px-4 rounded bg-gray-100">
-                <h2 className='font-semibold text-gray-800 text-2xl'>
-                    {CategoryName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())}
+                <h2 className='font-semibold text-gray-800 text-lg lg:text-2xl flex items-center gap-2 lg:gap-2.5'>
+                    {CategoryName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} 
+                    
+                    {SubCategoryName && 
+                    <>
+                        <span>
+                            <svg className='h-4' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg>
+                        </span>
+                        {SubCategoryName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())}
+                        </>
+                    }
+
+                    {SubSubCategoryName && 
+                        <>
+                        <span>
+                            <svg className='h-4' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg>
+                        </span>
+                        {SubSubCategoryName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())}
+                        </>
+                    }
                 </h2>
             </div>
             <div className="row py-4">
@@ -175,16 +244,18 @@ export default function CategoryPage() {
                     </div>
                 </div>
             </div>
-            <div className="row">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                 {Products.length === 0 ? (<p className='m-auto w-full text-center border border-gray-100 py-4 rounded'>No Product Found !</p>):(Products.map((data, index)=>(
-                    <div key={data.id} className="col-md-3 px-1">
+                    <div key={data.id} className="">
                         <div className="product_card h-[318px] border border-gray-100 rounded-lg">
                             <Link to={`/product/${data.slug}`}>
-                                <img className='w-full rounded-lg rounded-b-none' src={`${base_domain}${data.image}`} alt="" />
+                                <img className='w-full max-md:h-32 !h-48 object-cover rounded-lg' src={`${base_domain}${data.image}`} alt="" />
 
                                 <div className="product_card_text p-2">
-                                <h4 className='text-sm text-center font-medium'>{data.title}</h4>
-                                <p className='text-md font-medium text-end mt-2'>{data.price} tk</p>
+                                <h4 className='text-sm text-start font-medium'>{data.title}</h4>
+                                {data.price > 0 ? (
+                    <p className="text-md font-medium text-right mt-2 text-green-500">{data.price} tk</p>
+                  ):(<p className="text-md font-medium text-right mt-2 text-red-500">TBA</p>)}
                                 </div>
                             </Link>
                             
@@ -193,6 +264,18 @@ export default function CategoryPage() {
                     </div>
                 )))}
             </div>
+
+            {/* Pagination */}
+          <div className="flex justify-center mt-6">
+            <button onClick={handlePrevPage} disabled={CurrentPage === 1} className="p-3.5 mx-1 bg-gray-300 rounded-full disabled:opacity-50">
+                <svg className='h-4 w-4' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/></svg>
+            </button>
+            <span className="px-4 py-2 mx-2">Page {CurrentPage} of {totalPages}</span>
+            <button onClick={handleNextPage} disabled={CurrentPage === totalPages} className="p-3.5 mx-1 bg-gray-300 rounded-full disabled:opacity-50">
+                <svg className='h-4 w-4' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg>
+            </button>
+          </div>
+          
         </div>
     </div>
     </>

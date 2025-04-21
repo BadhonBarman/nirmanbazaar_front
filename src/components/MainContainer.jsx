@@ -6,25 +6,25 @@ import ThinHeader from './sub-components/ThinHeader';
 import BottomBar from './sub-components/BottomBar';
 
 export default function MainContainer() {
-  useEffect(() => {
-    // Start of Tawk.to Script
-    var Tawk_API = Tawk_API || {},
-      Tawk_LoadStart = new Date();
-    (function () {
+//   useEffect(() => {
+//     // Start of Tawk.to Script
+//     var Tawk_API = Tawk_API || {},
+//       Tawk_LoadStart = new Date();
+//     (function () {
   
-var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-(function(){
-var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-s1.async=true;
-s1.src='https://embed.tawk.to/6706e270cec6d0125df44984/1i9pfb390';
-s1.charset='UTF-8';
-s1.setAttribute('crossorigin','*');
-s0.parentNode.insertBefore(s1,s0);
-})();
+// var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+// (function(){
+// var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+// s1.async=true;
+// s1.src='https://embed.tawk.to/6706e270cec6d0125df44984/1i9pfb390';
+// s1.charset='UTF-8';
+// s1.setAttribute('crossorigin','*');
+// s0.parentNode.insertBefore(s1,s0);
+// })();
 
-    })();
-    // End of Tawk.to Script
-  }, []); 
+//     })();
+//     // End of Tawk.to Script
+//   }, []); 
 
 
   useEffect(() => {
