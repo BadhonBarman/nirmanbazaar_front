@@ -104,7 +104,7 @@ export default function CategoryPage() {
     <>
     <div className="row mt-2.5">
         <div className="col-md-3">
-            <div className="filter_sidebar">
+            <div className="filter_sidebar hidden lg:block">
 
                <div>
                     <h4 className='font-medium py-3'>Price Range</h4>
@@ -205,7 +205,7 @@ export default function CategoryPage() {
 
         <div className="col-md-9">
             <div className="py-8 px-4 rounded bg-gray-100">
-                <h2 className='font-semibold text-gray-800 text-lg lg:text-2xl flex items-center gap-2 lg:gap-2.5'>
+                <h2 className='font-semibold text-gray-800 text-base lg:text-2xl flex flex-wrap items-center gap-2 lg:gap-2.5'>
                     {CategoryName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} 
                     
                     {SubCategoryName && 
@@ -227,6 +227,7 @@ export default function CategoryPage() {
                     }
                 </h2>
             </div>
+            
             <div className="row py-4">
                 <div className="col-md-3">
                     <p className='text-md'><span className='font-semibold'>{TotalProducts}</span> Products Found</p>
@@ -244,12 +245,13 @@ export default function CategoryPage() {
                     </div>
                 </div>
             </div>
+
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                {Products.length === 0 ? (<p className='m-auto w-full text-center border border-gray-100 py-4 rounded'>No Product Found !</p>):(Products.map((data, index)=>(
+                {Products.length === 0 ? (<p className='col-span-2 lg:col-span-4 w-full text-center border border-gray-100 py-4 rounded'>No Product Found !</p>):(Products.map((data, index)=>(
                     <div key={data.id} className="">
-                        <div className="product_card h-[318px] border border-gray-100 rounded-lg">
+                        <div className="product_card max-md:h-[252px] h-[292px] border border-gray-100 rounded-lg">
                             <Link to={`/product/${data.slug}`}>
-                                <img className='w-full max-md:h-32 !h-48 object-cover rounded-lg' src={`${base_domain}${data.image}`} alt="" />
+                                <img className='w-full h-32 lg:!h-48 object-cover rounded-lg' src={`${base_domain}${data.image}`} alt="" />
 
                                 <div className="product_card_text p-2">
                                 <h4 className='text-sm text-start font-medium'>{data.title}</h4>

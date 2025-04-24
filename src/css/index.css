@@ -44,6 +44,34 @@
     scrollbar-color: #bbbbbb; /* Change to your preferred colors */
   }
 
+
+/* Custom horizontal scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #999;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c4c4c4;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #c4c4c4 #999;
+}
+
+
+
 @media (min-width: 1536px) {
     .container {
         max-width: 1280px;

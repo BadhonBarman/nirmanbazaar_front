@@ -48,9 +48,10 @@ export default function Header() {
   
             // Extract product IDs
             const productIds = Object.values(cartData).map(item => item.prod_id);
-  
+            const shopIds = Object.values(cartData).map(item => item.shop);
+            console.log("cart data before send : ", productIds)
             // Send the product IDs to the API
-            const response = await axios.post(`${base_domain}/cart_data/`, { data: productIds });
+            const response = await axios.post(`${base_domain}/cart_data/`, { data: productIds, shop:shopIds });
             setCart(response.data.products);
             setSkipItem(response.data.skipped_ids)
             console.log("cart data :", response.data);
@@ -73,6 +74,10 @@ export default function Header() {
       window.removeEventListener("cartUpdated", handleStorageChange);
     };
     }, [base_domain, window.location.pathname, ]);
+    // const savedCart = localStorage.getItem('cart');
+    // const cartData = JSON.parse(savedCart);
+    // const productIds = Object.values(cartData).map(item => item.prod_id);
+    // console.log("cart data before send : ", productIds)
 
     useEffect(() => {
       const categoryData = async () => {
@@ -137,7 +142,7 @@ export default function Header() {
       const calculateTotal = () => {
         return cart.reduce((total, data) => {
           const itemTotal = 
-            data.product.price * (Qcart[data.product.id]?.qty || 0);
+            data.price * (Qcart[data.product.id]?.qty || 0);
           return total + itemTotal;
         }, 0); // Initialize the accumulator to 0
       };
@@ -242,8 +247,8 @@ export default function Header() {
                 <img  height={64} width={64} className='rounded-sm' src={`${base_domain}${data.product.image}`} alt="" />
                   <div className='pl-2'>
                     <h4 className='text-sm'>{data.product.title}</h4>
-                    {data.offer_price ? (<h6 className=' flex items-center text-sm text-gray-800 font-semibold'><del className='text-gray-400'>৳{data.product.price}</del> ৳{data.offer_price} </h6>):(<h6 className='text-sm flex items-center gap-1 text-gray-800 font-semibold'>৳ {data.product.price}
-                      <span>x</span> <span>{Qcart[data.product.id]?.qty} = {data.product.price*Qcart[data.product.id]?.qty}</span>
+                    {data.offer_price ? (<h6 className=' flex items-center text-sm text-gray-800 font-semibold'><del className='text-gray-400'>৳{data.price}</del> ৳{data.offer_price} </h6>):(<h6 className='text-sm flex items-center gap-1 text-gray-800 font-semibold'>৳ {data.price}
+                      <span>x</span> <span>{Qcart[data.product.id]?.qty} = {data.price*Qcart[data.product.id]?.qty}</span>
                     </h6>)}
                     
                   </div>

@@ -9,6 +9,7 @@ export default function HandlePay() {
     const navigate = useNavigate();
         useEffect(() => {
             if(code === "200200"){
+                localStorage.removeItem('cart');
                 toast.success('Purchase successful');
                 navigate('/dashboard/order-history', { state: "successful" });
             }

@@ -49,7 +49,7 @@ export default function OrderHistory() {
 
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
+  // if (error) return <p>{error}</p>;
 
   return (
     <>

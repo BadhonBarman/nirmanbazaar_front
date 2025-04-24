@@ -23,7 +23,7 @@ export default function BiddingFormView() {
   }, [base_domain, id]);
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto">
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <h2 className="text-2xl font-semibold mb-4">Bidding Details</h2>
         <div className="flex flex-col md:flex-row gap-4">
@@ -48,7 +48,7 @@ export default function BiddingFormView() {
 
       <div className="bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-2xl font-semibold mb-4">Bidding Items</h2>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="table-auto min-w-full bg-white border border-gray-200">
             <thead>
               <tr className="bg-gray-100">
@@ -69,10 +69,11 @@ export default function BiddingFormView() {
               ))}
             </tbody>
           </table>
+          <p className='text-green-700 my-2.5 text-sm block lg:hidden'>**scroll left to right for preview</p>
         </div>
       </div>
 
-      <div className="text-right mt-4">
+      <div className="text-right mt-4 mb-20">
         <Link to="/dashboard/bidding-portal/" className="btn btn-primary">
           Back to Bidding List
         </Link>

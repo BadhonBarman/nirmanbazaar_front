@@ -108,8 +108,11 @@ export default function OrderItems() {
 
   return (
     <>
-      <div className="border mb-4 border-gray-100 rounded p-3.5">
-        <div className="flex gap-2">
+      <div className="border mb-4 border-gray-100 rounded p-3.5 w-full overflow-auto custom-scrollbar">
+        <h2>Order Status: <span className='green_badge rounded-xl'>{invdata.status}</span></h2>
+        <h2 className='mt-2.5'>Payment Status: {invdata.paid ? (<span className='green_badge rounded-xl'>Completed</span>):(<span className='red_badge rounded-xl'>Pending</span>)}</h2>
+        {!invdata.paid && <p className='text-red-600 text-sm font-semibold my-2'>This order will not be processed until the payment is completed.</p>}
+        <div className="flex flex-wrap gap-2">
           <div>
             <label>Invoice ID</label> <br />
             <input
@@ -121,7 +124,7 @@ export default function OrderItems() {
           </div>
 
           <div>
-            <label>Customer Name</label> <br />
+            <label>Name</label> <br />
             <input
               type="text"
               className="rounded border-gray-200"
@@ -133,7 +136,7 @@ export default function OrderItems() {
       </div>
 
       <div>
-        <div className="">
+        <div className="w-full overflow-auto custom-scrollbar">
           <table className="table-auto w-full border-collapse border border-gray-300">
             <thead>
               <tr className="bg-gray-100">
@@ -150,10 +153,10 @@ export default function OrderItems() {
                 Data.map((data, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="p-2">{index + 1}</td> {/* Using index instead of ID */}
-                    <td className="border border-gray-300 px-4 py-2">{data.product.title}</td>
+                    <td className="border min-w-[14rem] border-gray-300 px-4 py-2">{data.product.title}</td>
                     <td className="border border-gray-300 px-4 py-2">{data.qty}</td>
                     <td className="border border-gray-300 px-4 py-2">{data.amount}</td>
-                    <td className="border border-gray-300 px-4 py-2">{data.status}</td>
+                    <td className="border min-w-[10rem] border-gray-300 px-4 py-2"><span className='green_badge rounded-xl'>{data.status}</span></td>
                     <td className="border border-gray-300 px-4 py-2">
                       <div className="dropdown-center">
                         <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -176,7 +179,7 @@ export default function OrderItems() {
                         </button>
                         <ul className="dropdown-menu">
                           <li>
-                            <Link className="dropdown-item" to={`/dashboard/order-items/${data.order.invoice_id}`}>
+                            <Link className="dropdown-item">
                               Update Status
                             </Link>
                           </li>
@@ -192,13 +195,17 @@ export default function OrderItems() {
                   </td>
                 </tr>
               )}
-            </tbody>
-            <tfoot>
+
               <tr className="bg-gray-100">
-                <td colSpan="3"></td>
+                <td colSpan="4"></td>
                 <td className="border border-gray-300 px-4 py-2 font-bold">Total:</td>
                 <td className="border border-gray-300 px-4 py-2 font-bold">{totalAmount.toFixed(2)}</td>
                 <td></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colSpan={6}><p className='text-green-700 text-sm block lg:hidden w-full'>**scroll left to right for preview</p></td>
               </tr>
             </tfoot>
           </table>

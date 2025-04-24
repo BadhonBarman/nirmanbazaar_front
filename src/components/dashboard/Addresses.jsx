@@ -21,7 +21,7 @@ export default function Adresses() {
     id: '',
     address: '',
     division: '',
-    zip: '',
+    zip_code: '',
     city: '',
     phone: '',
     home: false,
@@ -67,12 +67,10 @@ export default function Adresses() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.put(`/update_address/${editAddress.id}/`, editAddress); // Adjust endpoint as necessary
-      setAddresses((prev) =>
-        prev.map((addr) => (addr.id === editAddress.id ? response.data.address : addr))
-      );
+      const response = await api.post(`/update_address/`, editAddress); // Adjust endpoint as necessary
+      
+      setAddresses(response.data);
       toast.success('Address updated successfully!');
-      setEditAddress({ id: '', address: '', division: '', zip: '', city: '', phone: '', home: false, primary: false });
     } catch (error) {
       console.error('Error updating address:', error);
       toast.error('Failed to update address.');
@@ -146,7 +144,7 @@ export default function Adresses() {
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Address Info Update</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div className="modal-body">
@@ -168,8 +166,8 @@ export default function Adresses() {
         id='edit_zip' 
         name='zip' 
         placeholder='Zip Code' 
-        value={editAddress.zip} 
-        onChange={(e) => setEditAddress({ ...editAddress, zip: e.target.value })} 
+        value={editAddress.zip_code} 
+        onChange={(e) => setEditAddress({ ...editAddress, zip_code: e.target.value })} 
       />
       <input 
         type="text" 
@@ -212,9 +210,16 @@ export default function Adresses() {
       />
     </div>
 
+      {!Addresses.find(addr => addr.id === editAddress.id)?.primary && 
+          <div className='my-2.5 flex flex-row gap-2 items-center'>
+            <input type="checkbox" onChange={(e) => setEditAddress({ ...editAddress, primary: !editAddress.primary })} className='rounded-sm' id="set_primary" name='set_primary' />
+            <label htmlFor="set_primary">set as primary address</label>
+          </div>
+      }
+
     <div class="modal-footer">
-        <button type="button" class="btn bg-red-600 text-white" data-bs-dismiss="modal">Close</button>
-        <button type="submit" class="btn primary_bg text-white">Save changes</button>
+        <button type="button" class="px-4 py-2.5 rounded-md bg-red-600 text-white" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="px-4 py-2.5 rounded-md primary_bg text-white">Save changes</button>
       </div>
 
   </form>
@@ -224,7 +229,7 @@ export default function Adresses() {
 </div>
         
 
-      <div className="card mt-4">
+      <div className="card mt-2 mb-20">
         <div className="card-body">
           <div className="grid max-md:grid-cols-1 grid-cols-3 gap-2">
             {Addresses.map((data) => (
@@ -250,7 +255,7 @@ export default function Adresses() {
                   </div>
                 </div>
                 <p>{data.address}</p>
-                <p>{data.city}, {data.division} - {data.zip}</p>
+                <p>{data.city}, {data.division} - {data.zip_code}</p>
                 <p>{data.phone}</p>
               </div>
             ))}

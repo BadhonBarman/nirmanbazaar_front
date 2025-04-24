@@ -26,6 +26,9 @@ export default function ProductView() {
   const [division, setDivision] = useState(null);
   const [district, setDistrict] = useState(null);
   const [related, setRelated] = useState([]);
+  const [selectedShop, setSelectedShop] = useState(null);
+  const [CustomError, setCustomError] = useState('');
+
 
     const divisions = [
         "Dhaka",
@@ -146,13 +149,20 @@ export default function ProductView() {
   const handleAddCart = () => {
     // Retrieve existing cart data from localStorage
         const existingCart = JSON.parse(localStorage.getItem('cart')) || {};
-      
+        
+        if (!selectedShop){
+            toast.error('check avaliablity first & select your choice')
+            setCustomError('Please check product availability at first & select your preferred shop deal.')
+            return;
+        }
+
         // Update cart with the new item
         const updatedCart = {
           ...existingCart,
           [product.id]: {
             prod_id: product.id,
             qty: quantity,
+            shop:selectedShop,
           },
         };
       
@@ -160,8 +170,8 @@ export default function ProductView() {
         localStorage.setItem('cart', JSON.stringify(updatedCart));
       
         // Dispatch custom event
-        window.dispatchEvent(new Event('cartUpdated'));
-      
+        // window.dispatchEvent(new Event('cartUpdated'));
+        window.location.reload()
         // Update state with the new cart data
         setCart(updatedCart);
       
@@ -183,6 +193,7 @@ export default function ProductView() {
     if (item) {
       console.log(`Item with prod_id ${targetProdId}:`, item);
       setQuantity(item.qty)
+      setSelectedShop(item.shop)
     } else {
       console.log(`Item with prod_id ${targetProdId} not found`);
     }
@@ -449,8 +460,12 @@ const stripHTML = (html) => {
                         <h4 className='my-2 font-medium'>Product Price & Availability</h4>
                         <table  className='table table-striped p-2'>
                                 {prices.map((data, index)=>(
-                                    <tr className='rounded-sm border-b border-green-800 bg-green-100'>
+                                    <tr onClick={()=>(
+                                        setSelectedShop(data.shop.id)
+                                    )} className='rounded-sm flex items-center border-b border-green-800 bg-green-100'>
+                                        <input className='ml-2 rounded-sm border-green-500' checked={selectedShop===data.shop.id} type="checkbox" name="" id="" />
                                         <td className='p-2'>{data.shop.name}</td>
+                                        <td className='p-2'>৳{data.price}</td>
                                         <td className='p-2' >{data.qty}<MeasureUnitConverter id={product.unit} /></td>
                                     </tr>
                                 ))}
@@ -496,14 +511,18 @@ const stripHTML = (html) => {
                             <span>Message on Whatsapp</span>
                         </Link>
                     </div>
+
+                    {CustomError && <p className='mt-3.5 alert alert-danger'>{CustomError}</p>}
                     
                      
-                    <div className="prod_btns mt-4 flex items-center">
+                    <div className="prod_btns mt-2 flex items-center">
                         <button onClick={handleAddCart} className='flex items-center primary_bg text-white  px-3 py-2 rounded text-lg'>
                             <svg className="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"/>
                             </svg>
-                            <span className='ml-2'>Add To Cart</span>
+                            <span className='ml-2'>
+                                {selectedShop ? 'Update Cart':'Add To Cart'}
+                            </span>
                         </button>
 
                         <button onClick={() => handleBookmarkClick(product.id)} className='text-lg ml-2 px-3 py-2 rounded bg-gray-100 border-none hover:bg-gray-200'>

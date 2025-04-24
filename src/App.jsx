@@ -28,6 +28,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import DashboardContainer from './components/dashboard/sub-elements/DashboardContainer';
 import CustomerAuthCheck from './features/CustomerAuthCheck';
+import scrollTop from './features/scrollTop.js';
 import { useSelector } from 'react-redux';
 import Dashboard from './components/dashboard/Dashboard';
 import OrderHistory from './components/dashboard/OrderHistory';
@@ -78,21 +79,15 @@ export default function App() {
   document.title = "Nirmanbazaar Bangladesh";
 
   CustomerAuthCheck();
+
+  useEffect(()=>{
+    scrollTop();
+  },[window.location.pathname])
+
+
   const isAuthenticated = useSelector((state)=>state.auth.isAuthenticated)
 
   console.log(isAuthenticated)
-
-  
-
-
-  
-
-
-    
-      
-    
-  
-
 
   return (
     <>
@@ -102,10 +97,11 @@ export default function App() {
 
 
 
-
       <Router>
 
         <Routes>
+
+          
 
         
           
