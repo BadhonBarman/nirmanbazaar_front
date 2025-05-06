@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate, Navigate, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux';
 
 import { initFlowbite } from 'flowbite';
 import BottomBar from '../../sub-components/BottomBar';
 import api from '../../../features/PrivateApiCall';
 import { loginSuccess, logout } from '../../../features/authSlice';
+import CustomerAuthCheck from '../../../features/CustomerAuthCheck';
 
 export default function DashboardContainer() {
    const base_domain = import.meta.env.VITE_APP_SOURCE_DOMAIN
@@ -15,8 +16,9 @@ export default function DashboardContainer() {
    
 
    const user = useSelector((state) => state.auth.user);
+   const isAuth = CustomerAuthCheck()
    initFlowbite()
-   
+
    useEffect(()=>{
       initFlowbite()
    },[window.location.pathname])
@@ -43,12 +45,7 @@ export default function DashboardContainer() {
       }
     };
     
-    useEffect(() => {
-      if (user === null) {
-        navigate('/login/')
-      }
-    }, [user, navigate]);
-    
+
    
    
   return user ? (

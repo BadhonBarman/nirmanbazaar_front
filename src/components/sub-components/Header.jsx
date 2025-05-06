@@ -79,12 +79,14 @@ export default function Header() {
     // const productIds = Object.values(cartData).map(item => item.prod_id);
     // console.log("cart data before send : ", productIds)
 
+    const ignoreCategory = ['heavy-equipment-buy-rent', 'building-maintenance-management']
+
     useEffect(() => {
       const categoryData = async () => {
       try {
           const response = await axios.get(`${base_domain}/categories/`);
           console.log('category response : ', response.data)
-          setCategory(response.data.categories);
+          setCategory(response.data.categories.filter(items=>(!ignoreCategory.includes(items.slug))));
           setSubCategory(response.data.sub_categories);
           setSubSubCategory(response.data.sub_sub_categories);
       }
@@ -554,7 +556,7 @@ export default function Header() {
             onMouseEnter={() => setOpenSubCategory(sub.id)}
           >
             <Link
-              to={`/category/${categories.find((c) => c.id === openCategory)?.slug}/${sub.slug}`}
+              to={`/category/${categories.find((c) => c.id === openCategory)?.slug}?category=${sub.slug}`}
               onClick={() => {
                 setMenuOpen(false);
                 setOpenCategory(null);
@@ -581,7 +583,7 @@ export default function Header() {
         .map((subSub) => (
           <li key={subSub.id}>
             <Link
-              to={`/category/${categories.find((c) => c.id === openCategory)?.slug}/${subCategories.find((s) => s.id === openSubCategory)?.slug}/${subSub.slug}`}
+              to={`/category/${categories.find((c) => c.id === openCategory)?.slug}?category=${subCategories.find((s) => s.id === openSubCategory)?.slug}&sub_category=${subSub.slug}`}
               onClick={() => {
                 setMenuOpen(false);
                 setOpenCategory(null);
@@ -608,6 +610,7 @@ export default function Header() {
             <li><Link to={'calculator/'}>Calculator</Link></li>
             <li><Link to={'blogs/'}>Blog</Link></li>
             <li><Link to={'become-vendor/'}>Become a Seller</Link></li>
+            <li><Link to={'brand-enrollment/'}>Brand Enrollment</Link></li>
           </ul>
         </ul>
       </div>

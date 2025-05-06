@@ -108,7 +108,7 @@ export default function ProductCard({data}) {
 
   return (
     <>
-            <div key={data.id} className="product_card relative border border-gray-200 max-md:h-[252px] h-[292px]  rounded-lg ">
+            <div key={data.id} className="product_card relative border border-gray-200 max-md:h-[330px] h-[335px]  rounded-lg ">
               <div className="absolute product_card_overlay right-1.5 top-2">
                 <div className="flex flex-col gap-1">
                   <button className='rounded-full shadow-sm bg-white p-2'>
@@ -136,11 +136,18 @@ export default function ProductCard({data}) {
               </div>
               <Link to={`/product/${data.slug}`}>
                 <img
-                  className="w-full h-40 lg:!h-48 object-cover rounded-t-lg"
+                  className="w-full h-42 lg:!h-48 object-cover rounded-t-lg"
                   src={`${base_domain}${data.image}`}
                   alt={data.title}
                 />
                 <div className="product_card_text p-2">
+                  <div className="flex flex-row items-center gap-2 my-2.5">
+                    {data?.brand && 
+                    <div className='p-1.5 bg-lime-50 px-2 rounded-md'>
+                      <img className='h-3.5 ' src={`${base_domain}${data?.brand?.logo}`} alt="" />
+                    </div>
+                    }
+                  </div>
                   <h4 className="text-sm text-start font-medium min-h-10">
                     <TextShorter text={data.title} range={38} />
                   </h4>

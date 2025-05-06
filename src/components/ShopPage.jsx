@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import ProductCard from './sub-components/ProductCard';
 
 export default function ShopPage() {
@@ -10,17 +10,27 @@ export default function ShopPage() {
   const [Products, setProducts] = useState([]);
   const [brandInfo, setBrand] = useState(null);
   const [TotalProducts, setTotal] = useState(0);
-
+  const [searchParams] = useSearchParams()
    const navigate = useNavigate();
    const location = useLocation();
    const queryParams = new URLSearchParams(location.search);
-   const initialPage = parseInt(queryParams.get('page')) || 1;
-   const [CurrentPage, setCurrentPage] = useState(initialPage);
+  //  const initialPage = parseInt(queryParams.get('page')) || 1;
+   const [CurrentPage, setCurrentPage] = useState(1);
    const productsPerPage = 8;
    const totalPages = Math.ceil(TotalProducts / productsPerPage);
 
    const initialKeyword = queryParams.get('q') || '';
   const [searchKeyword, setSearchKeyword] = useState(initialKeyword);
+
+  
+  useEffect(()=>{
+    if (searchParams.get('page')){
+    setCurrentPage(searchParams.get('page'))
+    }else{
+      setCurrentPage(1)
+    }
+  }, [searchParams])
+
    
    useEffect(() => {
     const fetchData = async () => {
@@ -42,21 +52,22 @@ export default function ShopPage() {
   }, [base_domain, slug, CurrentPage, totalPages, searchKeyword]);
 
 
+  
     // Get the current page from the URL or default to 1
 
-    useEffect(() => {
-          // Update the URL whenever the page changes
-          if (CurrentPage > totalPages){
-            setCurrentPage(1)
-          }
-          else if(CurrentPage===1){
-            return
-          }
-          else{
-            queryParams.set('page', CurrentPage);
-          }
-          navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
-    }, [CurrentPage, navigate, location.pathname, Products]);
+    // useEffect(() => {
+    //       // Update the URL whenever the page changes
+    //       if (CurrentPage > totalPages){
+    //         setCurrentPage(1)
+    //       }
+    //       else if(CurrentPage===1){
+    //         return
+    //       }
+    //       else{
+    //         queryParams.set('page', CurrentPage);
+    //       }
+    //       navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
+    // }, [CurrentPage, navigate, location.pathname, Products]);
         
     
 
@@ -69,6 +80,7 @@ export default function ShopPage() {
         }
         navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
       }, [searchKeyword, navigate, location.pathname]);
+      
 
       const handleSearch = (e) => {
         setSearchKeyword(e.target.value);
@@ -77,11 +89,19 @@ export default function ShopPage() {
 
   
   const handlePrevPage = () => {
-    if (CurrentPage > 1) setCurrentPage(CurrentPage - 1);
+    if (CurrentPage > 1) {
+      parseInt(setCurrentPage(CurrentPage - 1))
+      queryParams.set('page', parseInt(CurrentPage) - 1);
+      navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
+    };
   };
 
   const handleNextPage = () => {
-    if (CurrentPage < totalPages) setCurrentPage(CurrentPage + 1);
+    if (CurrentPage < totalPages){
+      setCurrentPage(CurrentPage + 1)
+      queryParams.set('page', parseInt(CurrentPage) + 1);
+      navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
+    };
   };
 
   return (

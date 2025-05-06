@@ -80,6 +80,7 @@ export default function App() {
 
   CustomerAuthCheck();
 
+
   useEffect(()=>{
     scrollTop();
   },[window.location.pathname])
@@ -87,7 +88,7 @@ export default function App() {
 
   const isAuthenticated = useSelector((state)=>state.auth.isAuthenticated)
 
-  console.log(isAuthenticated)
+
 
   return (
     <>
@@ -117,8 +118,8 @@ export default function App() {
 
             <Route path="product-request/" element={<ProductRequest />} />
             <Route path="category/:category" element={<CategoryPage />} />
-            <Route path="category/:category/:sub/" element={<CategoryPage />} />
-            <Route path="category/:category/:sub/:subsub/" element={<CategoryPage />} />
+            {/* <Route path="category/:category/:sub/" element={<CategoryPage />} />
+            <Route path="category/:category/:sub/:subsub/" element={<CategoryPage />} /> */}
 
             <Route path="shop-page/:slug" element={<ShopPage />} />
             <Route path="brand-page/:slug" element={<BrandPage />} />

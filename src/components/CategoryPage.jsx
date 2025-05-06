@@ -1,48 +1,136 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import ReactSlider from 'react-slider';
 
 export default function CategoryPage() {
     const base_domain = import.meta.env.VITE_APP_SOURCE_DOMAIN;
-    const {category, sub, subsub} = useParams()
+    const {category} = useParams()
+    const location = useLocation();
+    const [searchParams] = useSearchParams()
+    const navigate = useNavigate();
+    const queryParams = new URLSearchParams(location.search);
     const [CategoryName, setCategoryName] = useState("")
     const [SubCategoryName, setSubCategoryName] = useState("")
     const [SubSubCategoryName, setSubSubCategoryName] = useState("")
     const [Products, setProducts] = useState([])
     const [TotalProducts, setTotal] = useState(0)
-
-   const navigate = useNavigate();
-      const location = useLocation();
-      const queryParams = new URLSearchParams(location.search);
-      const initialPage = parseInt(queryParams.get('page')) || 1;
-      const [CurrentPage, setCurrentPage] = useState(initialPage);
-      const productsPerPage = 8;
-      const totalPages = Math.ceil(TotalProducts / productsPerPage);
+    const [subCategory, setSubCategory] = useState([])
+    const [Brands, setBrands] = useState([])
 
     
+
+    const [selectedBrand, setSelectedBrand] = useState('');
+    const [selectedSubCategory, setSelectedSubCategory] = useState('');
+    const [selectedSubSubCategory, setSelectedSubSubCategory] = useState('');
+
+    const initialPage = parseInt(queryParams.get('page')) || 1;
+    const [CurrentPage, setCurrentPage] = useState(initialPage);
+    const productsPerPage = 8;
+    const totalPages = Math.ceil(TotalProducts / productsPerPage);
+
     const [range, setRange] = useState([0, 100]);
+    const [min, setMin] = useState('');
+    const [max, setMax] = useState('');
+    const [rangestatus, setRangeStatus] = useState(false);
+
+    console.log("page name : ", category)
+    console.log("query params: ", queryParams)
+    console.log("brand query : ", searchParams.get('brand'))
+    console.log("category query : ", searchParams.get('category'))
+    console.log("sub category query : ", searchParams.get('sub_category'))
+
+    // useEffect(() => {
+    //     const brand = queryParams.get('brand') || '';
+    //     const category = queryParams.get('category') || '';
+    //     setSelectedBrand(brand);
+    //     setSelectedSubCategory(category);
+    // }, [queryParams]);
+
+    console.log('price range : ', range )
+    useEffect(() => {
+        const brand = searchParams.get('brand') || '';
+        const subCategory = searchParams.get('category') || '';
+    
+        setSelectedBrand(brand);
+        setSelectedSubCategory(subCategory);
+    }, []); // Only on initial mount
+    
+    const handleCheckboxChange = (type, value) => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        if (type === 'brand') {
+            params.set('brand', value);
+            setSelectedBrand(value);
+        } else if (type === 'category') {
+            params.set('category', value);
+            setSelectedSubCategory(value);
+        }
+        else if (type === 'sub_category') {
+            params.set('sub_category', value);
+            setSelectedSubSubCategory(value);
+        }
+
+        navigate(`/category/${CategoryName}?${params.toString()}`);
+    };
+
 
     useEffect(()=>{
-            const fetchData = async () => {
-                try {
-                    const response = await axios.post(`${base_domain}/category_items/`, {
-                        slug:category,
-                        sub:sub,
-                        subsub:subsub,
-                        page: CurrentPage,
-                        items_per_page: productsPerPage,
-                    });
-                    console.log(response.data)
-                    setProducts(response.data.products);
-                    setTotal(response.data.total_count);
-                }
-                catch (error) {
+        setCategoryName(category)
+        setSubCategoryName(searchParams.get('category'))
+        setSubSubCategoryName(searchParams.get('sub_category'))
+        
+        setSelectedSubSubCategory(searchParams.get('sub_category'));
+    }, [category, searchParams])
+
+
+    useEffect(()=>{
+        const fetchData = async () => {
+            try {
+                const response = await axios.post(`${base_domain}/category_items/`, {
+                    slug:category,
+                    page: CurrentPage,
+                    items_per_page: productsPerPage,
+                    brand: selectedBrand,
+                    category: selectedSubCategory,
+                    sub_category:selectedSubSubCategory
+                });
+                setSubCategory(response.data.subcategory);
+                setBrands(response.data.brands);        
+                setRange([response.data.price_range.min_price, response.data.price_range.max_price])
+                setMin(response.data.price_range.min_price);
+                setMax(response.data.price_range.max_price);
+            }
+            catch (error) {
                     console.error(error);
                 }
             }
     fetchData()
-    }, [base_domain,category, sub,subsub, CurrentPage ,window.location.pathname])
+    }, [base_domain,category]);
+
+    useEffect(()=>{
+        const fetchData = async () => {
+            try {
+                const response = await axios.post(`${base_domain}/category_items/`, {
+                    slug:category,
+                    page: CurrentPage,
+                    items_per_page: productsPerPage,
+                    brand: selectedBrand,
+                    category: selectedSubCategory,
+                    min : min,
+                    max:max,
+                    sub_category:selectedSubSubCategory
+                });
+                console.log("category view data : ",response.data)
+                setProducts(response.data.products);
+                setTotal(response.data.total_count)
+            }
+            catch (error) {
+                console.error(error);
+            }
+        }
+    fetchData()
+}, [category, CurrentPage, selectedBrand, selectedSubCategory, selectedSubSubCategory,searchParams.get('min'), searchParams.get('max') ]);
 
 
     
@@ -60,8 +148,26 @@ export default function CategoryPage() {
             queryParams.set('page', CurrentPage);
             navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
           }
-        }, [CurrentPage, totalPages, navigate, location.pathname]);
+        }, [CurrentPage]);
         
+
+        const handlerangeSubmit = (e) => {
+            e.preventDefault();
+            const params = new URLSearchParams(location.search);
+        
+            if (min !== '') {
+              params.set('min', min);
+            } else {
+              params.delete('min');
+            }
+        
+            if (max !== '') {
+              params.set('max', max);
+            } else {
+              params.delete('max');
+            }
+            navigate(`${location.pathname}?${params.toString()}`);
+        };
           
             
 
@@ -91,24 +197,45 @@ export default function CategoryPage() {
     )
 
 
-    useEffect(()=>{
-        setCategoryName(category)
-        setSubCategoryName(sub)
-        setSubSubCategoryName(subsub)
-    }, [category, sub, subsub])
     
     document.title = CategoryName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 
    
   return (
-    <>
-    <div className="row mt-2.5">
-        <div className="col-md-3">
-            <div className="filter_sidebar hidden lg:block">
+                            <>
+                            <div className="row mt-2.5">
+                                <div className="col-md-3">
+                                    <div className="filter_sidebar hidden lg:block">
 
-               <div>
-                    <h4 className='font-medium py-3'>Price Range</h4>
-                    <div className="dual-range-slider">
+                                    <div className=''>
+                                            <h4 className='font-medium py-3'>Price Range</h4>
+
+                                            <form onSubmit={handlerangeSubmit} className="flex gap-2 items-center">
+                            <input
+                                type="number"
+                                placeholder="Min Price"
+                                value={min}
+                                onChange={(e) => setMin(e.target.value)}
+                                min={range[0]}
+                                max={range[1]}
+                                className="border p-1 rounded max-w-[7rem]"
+                            />
+                            <input
+                                type="number"
+                                placeholder="Max Price"
+                                value={max}
+                                onChange={(e) => setMax(e.target.value)}
+                                min={range[0]}
+                                max={range[1]}
+                                className="border p-1 rounded max-w-[7rem]"
+                            />
+                            <button type="submit" className="bg-blue-500 text-white px-2.5 py-1 rounded">
+                                Apply
+                            </button>
+                            </form>
+                            <p className='italic text-sm text-yellow-500 font-semibold'>**Price Range : {range[0]}TK to {range[1]}TK</p>
+
+                    {/* <div className="dual-range-slider">
                         <ReactSlider
                             className="horizontal-slider"
                             thumbClassName="slider-thumb"
@@ -123,9 +250,49 @@ export default function CategoryPage() {
                             renderThumb={(props, state) => <div className='shadow-sm' {...props}></div>}  // Display value inside the thumb
                         />
                         <p> Price: {range[0]} - {range[1]} </p>
-                    </div>
+                    </div> */}
                </div>
-                
+
+               {subCategory.length > 0 && (
+                <div>
+                    <h4 className='font-medium py-3'>Sub Category</h4>
+                    <ul className='flex flex-col gap-2'>
+                        {subCategory.map((data, index) => (
+                            <li key={index} className='flex items-center'>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedSubCategory === data.slug}
+                                    onChange={() => handleCheckboxChange('category', data.slug)}
+                                    id={`cat-${data.slug}`}
+                                    className='rounded-sm h-4 w-4 mr-1 shadow_none focus:!accent-pink-500'
+                                />
+                                <label htmlFor={`cat-${data.slug}`} className='text-sm font-medium'>{data.title}</label>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            {Brands.length > 0 && (
+                <div>
+                    <h4 className='font-medium py-3'>Brands</h4>
+                    <ul className='flex flex-col gap-2'>
+                        {Brands.map((data, index) => (
+                            <li key={index} className='flex items-center'>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedBrand === data.slug}
+                                    onChange={() => handleCheckboxChange('brand', data.slug)}
+                                    id={`brand-${data.slug}`}
+                                    className='rounded-sm h-4 w-4 mr-1 shadow_none focus:!accent-pink-500'
+                                />
+                                <label htmlFor={`brand-${data.slug}`} className='text-sm font-medium'>{data.name}</label>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
                 <div className='mt-4'>
                     <h4 className='font-medium py-3'>Rating</h4>
                     
@@ -231,17 +398,120 @@ export default function CategoryPage() {
             <div className="row py-4">
                 <div className="col-md-3">
                     <p className='text-md'><span className='font-semibold'>{TotalProducts}</span> Products Found</p>
+                    
                 </div>
                 <div className="col-md-9">
-                    <div className="flex justify-end items-center">
+                    <div className="flex justify-between lg:justify-end items-center">
                         
-                        <select className='rounded-md' name="sorting" id="sorting">
+                        {/* <select className='rounded-md' name="sorting" id="sorting">
                             <option value="featured">Sort by: Newest</option>
                             <option value="featured">Sort by: Oldest</option>
                             <option value="featured">Price: Low to High</option>
                             <option value="featured">Price: High to Low</option>
                             <option value="featured">Avg. Rating</option>
-                        </select>
+                        </select> */}
+                        <div></div>
+
+                        <button className="lg:hidden flex flex-row items-center gap-2"  type="button" data-bs-toggle="offcanvas" data-bs-target="#filtermenucanvas" >
+                            <svg className='h-4 w-4 fill-gray-600' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M3.9 54.9C10.5 40.9 24.5 32 40 32l432 0c15.5 0 29.5 8.9 36.1 22.9s4.6 30.5-5.2 42.5L320 320.9 320 448c0 12.1-6.8 23.2-17.7 28.6s-23.8 4.3-33.5-3l-64-48c-8.1-6-12.8-15.5-12.8-25.6l0-79.1L9 97.3C-.7 85.4-2.8 68.8 3.9 54.9z"/></svg>
+                            <span className='font-medium'>Filter</span>
+                        </button>
+
+                        <div class="offcanvas offcanvas-end max-w-[300px]" data-bs-scroll="true" tabindex="-1" id="filtermenucanvas" aria-labelledby="filtermenucanvas">
+                            <div class="offcanvas-header">
+                                <h5 class="offcanvas-title" id="filtermenucanvas">Filter Menu</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                            </div>
+                            <div class="offcanvas-body">
+                            <div>
+                                        <h4 className='font-medium py-3'>Price Range</h4>
+
+                                        <div className="dual-range-slider">
+                                            {/* <ReactSlider
+                                                className="horizontal-slider"
+                                                thumbClassName="slider-thumb"
+                                                trackClassName="slider-track"
+                                                min={range[0]}
+                                                max={range[1]}
+                                                value={range}
+                                                onChange={handleSliderChange}
+                                                minDistance={1}  // Ensure min and max don't overlap
+                                                withTracks={true}
+                                                pearling={true}  // Allows you to drag both handles together
+                                                renderThumb={(props, state) => <div className='shadow-sm' {...props}></div>}  // Display value inside the thumb
+                                            />
+                                            <p> Price: {range[0]} - {range[1]} </p> */}
+                                            
+                                            <form onSubmit={handlerangeSubmit} className="flex gap-2 items-center">
+                            <input
+                                type="number"
+                                placeholder="Min Price"
+                                value={min}
+                                onChange={(e) => setMin(e.target.value)}
+                                min={range[0]}
+                                max={range[1]}
+                                className="border p-1 rounded max-w-[7rem]"
+                            />
+                            <input
+                                type="number"
+                                placeholder="Max Price"
+                                value={max}
+                                onChange={(e) => setMax(e.target.value)}
+                                min={range[0]}
+                                max={range[1]}
+                                className="border p-1 rounded max-w-[7rem]"
+                            />
+                            <button type="submit" className="bg-blue-500 text-white px-2.5 py-1 rounded">
+                                Apply
+                            </button>
+                            </form>
+                            <p className='italic text-sm text-yellow-500 font-semibold'>**Price Range : {range[0]}TK to {range[1]}TK</p>
+
+                                        </div>
+                                </div>
+
+                                {subCategory.length > 0 && (
+                                    <div>
+                                        <h4 className='font-medium py-3'>Sub Category</h4>
+                                        <ul className='flex flex-col gap-2'>
+                                            {subCategory.map((data, index) => (
+                                                <li key={index} className='flex items-center'>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedSubCategory === data.slug}
+                                                        onChange={() => handleCheckboxChange('category', data.slug)}
+                                                        id={`cat-${data.slug}`}
+                                                        className='rounded-sm h-4 w-4 mr-1 shadow_none focus:!accent-pink-500'
+                                                    />
+                                                    <label htmlFor={`cat-${data.slug}`} className='text-sm font-medium'>{data.title}</label>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {Brands.length > 0 && (
+                                    <div>
+                                        <h4 className='font-medium py-3'>Brands</h4>
+                                        <ul className='flex flex-col gap-2'>
+                                            {Brands.map((data, index) => (
+                                                <li key={index} className='flex items-center'>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedBrand === data.slug}
+                                                        onChange={() => handleCheckboxChange('brand', data.slug)}
+                                                        id={`brand-${data.slug}`}
+                                                        className='rounded-sm h-4 w-4 mr-1 shadow_none focus:!accent-pink-500'
+                                                    />
+                                                    <label htmlFor={`brand-${data.slug}`} className='text-sm font-medium'>{data.name}</label>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>

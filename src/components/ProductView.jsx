@@ -27,6 +27,7 @@ export default function ProductView() {
   const [district, setDistrict] = useState(null);
   const [related, setRelated] = useState([]);
   const [selectedShop, setSelectedShop] = useState(null);
+  const [selectedQty, setSelectedQty] = useState(0);
   const [CustomError, setCustomError] = useState('');
 
 
@@ -314,6 +315,13 @@ const stripHTML = (html) => {
             <div className="col-md-8">
                 <div className="product_info mt-8">
                     <p className='text-green-500 text-lg'><CategoryConverter id={product.category} /></p>
+                    <div className="flex flex-row items-center gap-2 my-2.5">
+                        {product?.brand && 
+                        <div className='p-1.5 bg-lime-50 px-2 rounded-md'>
+                        <img className='h-3.5 ' src={`${base_domain}${product?.brand?.logo}`} alt="" />
+                        </div>
+                        }
+                    </div>
                     <h4 className='text-3xl font-bold eng_font'>{product.title}</h4>
 
                     
@@ -460,13 +468,14 @@ const stripHTML = (html) => {
                         <h4 className='my-2 font-medium'>Product Price & Availability</h4>
                         <table  className='table table-striped p-2'>
                                 {prices.map((data, index)=>(
-                                    <tr onClick={()=>(
+                                    <tr onClick={()=>{{
                                         setSelectedShop(data.shop.id)
-                                    )} className='rounded-sm flex items-center border-b border-green-800 bg-green-100'>
+                                        setSelectedQty(data.qty)
+                                    }}} className='rounded-sm flex items-center border-b border-green-800 bg-green-100'>
                                         <input className='ml-2 rounded-sm border-green-500' checked={selectedShop===data.shop.id} type="checkbox" name="" id="" />
                                         <td className='p-2'>{data.shop.name}</td>
                                         <td className='p-2'>৳{data.price}</td>
-                                        <td className='p-2' >{data.qty}<MeasureUnitConverter id={product.unit} /></td>
+                                        {/* <td className='p-2' >{data.qty}<MeasureUnitConverter id={product.unit} /></td> */}
                                     </tr>
                                 ))}
                         </table>
@@ -485,19 +494,65 @@ const stripHTML = (html) => {
 
                     <label htmlFor="quantity-input" className="block mb-2 mt-8 text-lg font-medium text-gray-900 dark:text-white">Choose quantity:</label>
                     <div className="flex items-center gap-8">
-                        <div className="relative flex items-center max-w-[8rem]">
-                            <button type="button" disabled={quantity===1} onClick={(e) => setQuantity(quantity-1)} id="decrement-button" data-input-counter-decrement="quantity-input" className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-s-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
-                                <svg className="w-3 h-3 text-gray-900 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
-                                    <path stroke="currentColor" strokeLinecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h16"/>
-                                </svg>
-                            </button>
-                            <input type="text" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} id="quantity-input" data-input-counter aria-describedby="helper-text-explanation" className=" bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-lg focus:ring-blue-500 focus:border-blue-500 block w-14 py-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
-                            <button type="button" disabled={quantity===product.qty} onClick={(e) => setQuantity(quantity+1)} id="increment-button" data-input-counter-increment="quantity-input" className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-e-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
-                                <svg className="w-3 h-3 text-gray-900 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
-                                    <path stroke="currentColor" strokeLinecap="round" stroke-linejoin="round" stroke-width="2" d="M9 1v16M1 9h16"/>
-                                </svg>
-                            </button>
-                        </div>
+                    <div className="relative flex items-center max-w-[8rem]">
+                    <button
+                        type="button"
+                        disabled={quantity <= 1}
+                        onClick={() => {
+                            if (!selectedShop) {
+                                setCustomError('Check availability and select shop first');
+                                return;
+                            }
+                            setCustomError('');
+                            setQuantity(quantity - 1);
+                        }}
+                        className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-s-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none"
+                    >
+                        <svg className="w-3 h-3 text-gray-900 dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
+                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 1h16" />
+                        </svg>
+                    </button>
+
+                    <input
+                        type="number"
+                        value={quantity}
+                        min={1}
+                        max={selectedQty}
+                        disabled={!selectedShop}
+                        onChange={(e) => {
+                            if (!selectedShop) {
+                                setCustomError('Check availability and select shop first');
+                                return;
+                            }
+                            const val = Number(e.target.value);
+                            if (val >= 1 && val <= selectedQty) {
+                                setCustomError('');
+                                setQuantity(val);
+                            }
+                        }}
+                        className="bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-lg focus:ring-blue-500 focus:border-blue-500 block w-14 py-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        required
+                    />
+
+                    <button
+                         type="button"
+                         disabled={quantity >= selectedQty && selectedShop}
+                         onClick={() => {
+                             if (!selectedShop) {
+                                 setCustomError('Check availability and select shop first');
+                                 return;
+                             }
+                             setCustomError('');
+                             setQuantity(quantity + 1);
+                         }}
+                        className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-e-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none"
+                    >
+                        <svg className="w-3 h-3 text-gray-900 dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
+                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 1v16M1 9h16" />
+                        </svg>
+                    </button>
+                </div>
+
                     </div>
 
                     <div className='flex flex-row gap-2.5 mt-4'>

@@ -122,6 +122,8 @@ export default function MyCart() {
         }
       });
 
+      console.log('this is response of cart: ', response.data)
+
       if (response.data) {
         window.location = response.data.redirect
         // toast.success('Order placed successfully!');
@@ -275,6 +277,7 @@ export default function MyCart() {
             <label htmlFor="pay_method" className='mt-3'>Select Pay Method</label>
             <select name="pay_method" id="pay_method" className="border-gray-300 rounded p-2.5 w-full" value={payMethod} onChange={handlePayMethodSelect}>
               <option value="bank">Bank Transfer/Deposite</option>
+              <option value="cod">Cash on Delivery</option>
               <option value="bkash">Bkash</option>
             </select>
 

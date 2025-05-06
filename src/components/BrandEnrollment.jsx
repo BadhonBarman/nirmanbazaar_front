@@ -127,7 +127,7 @@ export default function BrandEnrollment() {
                 value={formData.phoneNumber}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border rounded-md"
-                placeholder="+880 1XXX-XXXXXX"
+                placeholder="01XXX-XXXXXX"
                 required
               />
             </div>
