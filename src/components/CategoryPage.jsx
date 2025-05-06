@@ -24,7 +24,7 @@ export default function CategoryPage() {
     const [selectedSubCategory, setSelectedSubCategory] = useState('');
     const [selectedSubSubCategory, setSelectedSubSubCategory] = useState('');
 
-    const initialPage = parseInt(queryParams.get('page')) || 1;
+    const initialPage = parseInt(searchParams.get('page')) || 1;
     const [CurrentPage, setCurrentPage] = useState(initialPage);
     const productsPerPage = 8;
     const totalPages = Math.ceil(TotalProducts / productsPerPage);
@@ -39,6 +39,8 @@ export default function CategoryPage() {
     console.log("brand query : ", searchParams.get('brand'))
     console.log("category query : ", searchParams.get('category'))
     console.log("sub category query : ", searchParams.get('sub_category'))
+
+    console.log("page number : ", searchParams.get('page'))
 
     // useEffect(() => {
     //     const brand = queryParams.get('brand') || '';
@@ -63,14 +65,13 @@ export default function CategoryPage() {
             params.set('brand', value);
             setSelectedBrand(value);
         } else if (type === 'category') {
-            params.set('category', value);
             setSelectedSubCategory(value);
+            params.set('category', value);
         }
         else if (type === 'sub_category') {
             params.set('sub_category', value);
             setSelectedSubSubCategory(value);
         }
-
         navigate(`/category/${CategoryName}?${params.toString()}`);
     };
 
@@ -79,9 +80,9 @@ export default function CategoryPage() {
         setCategoryName(category)
         setSubCategoryName(searchParams.get('category'))
         setSubSubCategoryName(searchParams.get('sub_category'))
-        
         setSelectedSubSubCategory(searchParams.get('sub_category'));
-    }, [category, searchParams])
+    }, [category, searchParams, CategoryName, SubCategoryName, SubSubCategoryName])
+
 
 
     useEffect(()=>{
@@ -106,32 +107,9 @@ export default function CategoryPage() {
                 }
             }
     fetchData()
-    }, [base_domain,category]);
+    }, [base_domain,category,CategoryName, SubCategoryName, SubSubCategoryName]);
 
-    useEffect(()=>{
-        const fetchData = async () => {
-            try {
-                const response = await axios.post(`${base_domain}/category_items/`, {
-                    slug:category,
-                    page: CurrentPage,
-                    items_per_page: productsPerPage,
-                    brand: selectedBrand,
-                    category: selectedSubCategory,
-                    min : min,
-                    max:max,
-                    sub_category:selectedSubSubCategory
-                });
-                console.log("category view data : ",response.data)
-                setProducts(response.data.products);
-                setTotal(response.data.total_count)
-            }
-            catch (error) {
-                console.error(error);
-            }
-        }
-    fetchData()
-}, [category, CurrentPage, selectedBrand, selectedSubCategory, selectedSubSubCategory,searchParams.get('min'), searchParams.get('max') ]);
-
+    
 
     
         useEffect(() => {
@@ -145,10 +123,14 @@ export default function CategoryPage() {
           if (CurrentPage === 1) {
             navigate(location.pathname, { replace: true }); // Remove the page parameter for the first page
           } else {
-            queryParams.set('page', CurrentPage);
-            navigate(`${location.pathname}?${queryParams.toString()}`, { replace: true });
+            searchParams.set('page', CurrentPage);
+            navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
           }
         }, [CurrentPage]);
+
+        
+
+        
         
 
         const handlerangeSubmit = (e) => {
@@ -183,6 +165,31 @@ export default function CategoryPage() {
   const handleNextPage = () => {
     if (CurrentPage < totalPages) setCurrentPage(CurrentPage + 1);
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+        try {
+            const response = await axios.post(`${base_domain}/category_items/`, {
+                slug: category || CategoryName,
+                page: CurrentPage,
+                items_per_page: productsPerPage,
+                brand: selectedBrand,
+                category: selectedSubCategory || SubCategoryName,
+                sub_category: selectedSubSubCategory || SubSubCategoryName,
+                min: min,
+                max: max,
+            });
+            console.log("category view data : ", response.data);
+            setProducts(response.data.products);
+            setTotal(response.data.total_count);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+    fetchData();
+}, [category, CurrentPage, selectedBrand, CategoryName, SubCategoryName, SubSubCategoryName,selectedSubCategory, selectedSubSubCategory, min, max]);
+
+  
 
     const fill_start = (
         <svg class="w-4 h-4 ms-1 text-yellow-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 20">
